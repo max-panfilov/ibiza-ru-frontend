@@ -1,0 +1,40 @@
+---
+// src/components/EntityCard.astro
+// Универсальная карточка для списков (отели/пляжи/рестораны/клубы).
+
+import type { PlaceEntity } from '../types'
+
+export interface Props {
+  entity: PlaceEntity
+  href: string
+}
+
+const { entity, href } = Astro.props
+---
+
+<a href={href} class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow">
+  <figure class="aspect-[16/9]">
+    <img
+      src={entity.coverImage ?? '/placeholder.jpg'}
+      alt={entity.title}
+      class="h-full w-full object-cover"
+      loading="lazy"
+    />
+  </figure>
+  <div class="card-body">
+    <h3 class="card-title leading-snug">{entity.title}</h3>
+
+    <div class="flex flex-wrap gap-2">
+      {entity.location ? <span class="badge badge-outline">{entity.location}</span> : null}
+      {entity.priceLevel ? (
+        <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{entity.priceLevel}</span>
+      ) : null}
+    </div>
+
+    <p class="text-base-content/70">{entity.summary}</p>
+
+    <div class="card-actions mt-2">
+      <span class="btn btn-primary btn-sm">Подробнее</span>
+    </div>
+  </div>
+</a>

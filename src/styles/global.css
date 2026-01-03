@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Базовые улучшения UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Типографика для контента статей без подключения @tailwindcss/typography */
+.article-content {
+  @apply text-base leading-7;
+}
+
+.article-content h1 {
+  @apply text-3xl font-bold mt-2 mb-4;
+}
+
+.article-content h2 {
+  @apply text-2xl font-bold mt-8 mb-3;
+}
+
+.article-content h3 {
+  @apply text-xl font-semibold mt-7 mb-2;
+}
+
+.article-content p {
+  @apply my-4;
+}
+
+.article-content a {
+  @apply link link-primary;
+}
+
+.article-content ul {
+  @apply list-disc pl-6 my-4;
+}
+
+.article-content ol {
+  @apply list-decimal pl-6 my-4;
+}
+
+.article-content hr {
+  @apply my-10 border-base-200;
+}
+
+.article-content blockquote {
+  @apply my-6 border-l-4 border-primary/40 pl-4 italic text-base-content/80;
+}
+
+.article-content figure {
+  @apply my-6;
+}
+
+.article-content figcaption {
+  @apply mt-2 text-sm text-base-content/60;
+}
+
+.article-content img {
+  @apply rounded-xl border border-base-200;
+}
+
+/* Врезка / callout внутри статьи */
+.article-callout {
+  @apply my-6 p-4 rounded-2xl border border-base-200 bg-base-200/30;
+}
+
+.article-callout__title {
+  @apply font-semibold mb-2;
+}
+
+/* Встраиваемый блок-тизер заведения (отель/ресторан/клуб) */
+.article-place {
+  @apply my-8;
+}

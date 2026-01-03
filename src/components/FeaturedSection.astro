@@ -1,0 +1,62 @@
+---
+// src/components/FeaturedSection.astro
+// Блок «Исследуйте Ибицу» с карточками категорий.
+
+const categories = [
+  {
+    title: 'Отели',
+    description: 'Лучшие места для проживания на Ибице — от роскошных курортов до уютных бутик-отелей',
+    href: '/hotels',
+    icon: '🏨',
+  },
+  {
+    title: 'Пляжи',
+    description: 'Откройте для себя кристально чистые воды и белоснежные пески лучших пляжей острова',
+    href: '/beaches',
+    icon: '🏖️',
+  },
+  {
+    title: 'Рестораны',
+    description: 'Изысканная кухня и потрясающие виды в лучших ресторанах Ибицы',
+    href: '/restaurants',
+    icon: '🍽️',
+  },
+  {
+    title: 'Клубы',
+    description: 'Легендарные ночные клубы и лучшие диджеи со всего мира',
+    href: '/clubs',
+    icon: '🎧',
+  },
+]
+---
+
+<section class="py-20 bg-base-100">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Исследуйте Ибицу</h2>
+      <p class="mt-4 text-lg text-base-content/70 max-w-2xl mx-auto">
+        Все, что вам нужно для идеального отдыха на острове — от роскошных отелей до легендарных клубов
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {categories.map((c) => (
+        <a href={c.href} class="card bg-base-100 border border-base-200 hover:shadow-md transition-shadow">
+          <div class="card-body">
+            <div class="mb-2 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary text-2xl">
+              {c.icon}
+            </div>
+            <h3 class="card-title">{c.title}</h3>
+            <p class="text-base-content/70">{c.description}</p>
+            <div class="card-actions mt-4">
+              <span class="btn btn-ghost w-full justify-between">
+                <span>Подробнее</span>
+                <span aria-hidden="true">→</span>
+              </span>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

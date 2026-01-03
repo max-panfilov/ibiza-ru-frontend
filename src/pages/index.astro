@@ -1,0 +1,20 @@
+---
+// src/pages/index.astro
+// Главная страница прототипа v2 (Astro + daisyUI).
+
+import SiteLayout from '../layouts/SiteLayout.astro'
+import HeroSection from '../components/HeroSection.astro'
+import FeaturedSection from '../components/FeaturedSection.astro'
+import LatestArticlesSection from '../components/LatestArticlesSection.astro'
+---
+
+<SiteLayout
+  title="Ibiza.ru - Туристический портал Ибицы"
+  description="Ваш путеводитель по Ибице — лучшие отели, пляжи, рестораны и клубы."
+  canonical="https://ibiza.ru"
+  isHome={true}
+>
+  <HeroSection />
+  <FeaturedSection />
+  <LatestArticlesSection />
+</SiteLayout>

@@ -1,0 +1,127 @@
+---
+// src/components/SiteHeader.astro
+// Шапка сайта: фиксированная, с адаптивным меню.
+
+import { navItems } from '../data/navItems'
+
+export interface Props {
+  currentPath: string
+  isHome?: boolean
+}
+
+const { currentPath, isHome = false } = Astro.props
+
+const isActive = (href: string) => currentPath === href
+---
+
+<header
+  id="site-header"
+  class={
+    isHome
+      ? 'fixed top-0 left-0 right-0 z-50 transition-colors duration-300 bg-transparent'
+      : 'fixed top-0 left-0 right-0 z-50 transition-colors duration-300 bg-primary shadow-md'
+  }
+>
+  <div class="container mx-auto px-4">
+    <div class="navbar min-h-16 text-primary-content">
+      <!-- На мобильных daisyUI задаёт navbar-start ширину 50%, из-за чего SVG-логотип «сжимается».
+           Делаем стартовый блок на мобильных во всю ширину, а на lg возвращаем 1/2 для центрирования меню. -->
+      <div class="navbar-start w-full lg:w-1/2">
+        <div class="dropdown">
+          <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+            <!-- Иконка «бургер» без сторонних зависимостей -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </div>
+          <ul
+            tabindex="0"
+            class="menu menu-sm dropdown-content mt-3 z-[60] p-2 shadow bg-base-100 text-base-content rounded-box w-56"
+          >
+            {navItems.map((item) => (
+              <li>
+                <a href={item.href} class={isActive(item.href) ? 'active font-semibold' : ''}>{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Логотип кликабельный, но не выглядит как кнопка.
+             Важно: запрещаем flex-shrink, чтобы SVG не сжимался по ширине на мобиле. -->
+        <a href="/" aria-label="На главную" class="inline-flex items-center px-2 shrink-0">
+          <img
+            src="/images/ibiza-logo-white.svg"
+            alt="Ibiza.ru"
+            class="h-8 w-auto shrink-0"
+            loading="eager"
+          />
+        </a>
+      </div>
+
+      <div class="navbar-center hidden lg:flex">
+        <ul class="menu menu-horizontal px-1">
+          {navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class={
+                  isActive(item.href)
+                    ? 'font-bold text-white'
+                    : 'text-white/80 hover:text-yellow-300'
+                }
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- На мобильных этот блок не нужен (и только мешает шириной). На lg сохраняем для будущих элементов. -->
+      <div class="navbar-end hidden lg:flex lg:w-1/2 justify-end">
+        <!-- TODO(интеграция): позже здесь можно добавить поиск/переключатель темы -->
+      </div>
+    </div>
+  </div>
+</header>
+
+{isHome ? (
+  <script is:inline>
+    // Поведение как в v0: на главной шапка прозрачная до прокрутки.
+    // Важно: инициализацию делаем после загрузки DOM, чтобы гарантированно найти header.
+    const initHeaderScrollBehavior = () => {
+      const header = document.getElementById('site-header')
+      if (!header) return
+
+      // Защита от двойной инициализации (на случай повторных загрузок/переходов).
+      if (header.dataset.scrollInit === '1') return
+      header.dataset.scrollInit = '1'
+
+      const setHeaderState = () => {
+        const scrolled = window.scrollY > 10
+        header.classList.toggle('bg-primary', scrolled)
+        header.classList.toggle('shadow-md', scrolled)
+        header.classList.toggle('bg-transparent', !scrolled)
+      }
+
+      setHeaderState()
+      window.addEventListener('scroll', setHeaderState, { passive: true })
+    }
+
+    // Первичная загрузка.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initHeaderScrollBehavior, { once: true })
+    } else {
+      initHeaderScrollBehavior()
+    }
+
+    // Совместимость с astro view-transitions (если включишь позже).
+    document.addEventListener('astro:page-load', initHeaderScrollBehavior)
+  </script>
+) : null}

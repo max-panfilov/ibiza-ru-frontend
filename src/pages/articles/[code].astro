@@ -1,0 +1,64 @@
+---
+// src/pages/articles/[code].astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import { articles } from '../../data/articles'
+import { formatDateRu } from '../../lib/formatDate'
+import type { Article } from '../../types'
+
+export function getStaticPaths() {
+  return articles.map((article) => ({
+    params: { code: article.code },
+    props: { article },
+  }))
+}
+
+const { article } = Astro.props as { article: Article }
+---
+
+<SiteLayout
+  title={`${article.title} | Ibiza.ru`}
+  description={article.summary}
+  canonical={`https://ibiza.ru/articles/${article.code}`}
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs
+        items={[
+          { href: '/', label: 'Главная' },
+          { href: '/articles', label: 'Статьи' },
+          { label: article.title },
+        ]}
+      />
+    </div>
+
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold">{article.title}</h1>
+      <div class="mt-2 text-sm text-base-content/60">
+        {formatDateRu(article.publishedAt)}
+        {article.author ? <span> · {article.author}</span> : null}
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div class="lg:col-span-2">
+        <!-- Контент статьи (в прототипе — HTML). Позже заменим на рендер rich-text/markdown из Directus. -->
+        <article class="article-content" set:html={article.contentHtml} />
+      </div>
+      <aside class="lg:col-span-1">
+        <div class="card bg-base-100 border border-base-200">
+          <div class="card-body">
+            <h2 class="card-title text-lg">Блок справа (прототип)</h2>
+            <p class="text-base-content/70">
+              Здесь можно разместить «похожие статьи», подписку, рекламу или навигацию по разделам.
+            </p>
+            <div class="card-actions">
+              <a class="btn btn-ghost" href="/articles">Назад к списку</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</SiteLayout>

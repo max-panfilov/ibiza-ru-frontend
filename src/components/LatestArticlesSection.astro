@@ -1,0 +1,35 @@
+---
+// src/components/LatestArticlesSection.astro
+// Блок «Последние статьи» на главной.
+
+import { articles } from '../data/articles'
+import { formatDateRu } from '../lib/formatDate'
+
+const latest = articles.slice(0, 3)
+---
+
+<section class="container mx-auto px-4 py-14">
+  <h2 class="text-4xl font-bold mb-10 text-center">Последние статьи</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    {latest.length === 0 ? (
+      <div class="col-span-full text-center text-base-content/60 py-12">Нет статей для отображения</div>
+    ) : (
+      latest.map((a) => (
+        <a
+          href={`/articles/${a.code}`}
+          class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow"
+        >
+          <figure class="aspect-[16/9]">
+            <img src={a.coverImage ?? '/placeholder.jpg'} alt={a.title} class="h-full w-full object-cover" loading="lazy" />
+          </figure>
+          <div class="card-body">
+            <h3 class="card-title leading-snug">{a.title}</h3>
+            <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
+            <p class="text-base-content/70 line-clamp-3">{a.summary}</p>
+          </div>
+        </a>
+      ))
+    )}
+  </div>
+</section>

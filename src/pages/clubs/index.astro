@@ -1,0 +1,35 @@
+---
+// src/pages/clubs/index.astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import EntityCard from '../../components/EntityCard.astro'
+import { clubs } from '../../data/clubs'
+---
+
+<SiteLayout
+  title="Клубы Ибицы | Ibiza.ru"
+  description="Легендарные ночные клубы Ибицы — от всемирно известных до андеграундных. (Прототип)"
+  canonical="https://ibiza.ru/clubs"
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs items={[{ href: '/', label: 'Главная' }, { label: 'Клубы' }]} />
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Клубы Ибицы</h1>
+      <p class="text-base-content/70 mt-2">Легендарные ночные клубы и лучшие диджеи со всего мира</p>
+    </div>
+
+    {clubs.length === 0 ? (
+      <div class="text-center py-12 text-base-content/60">Клубы пока не добавлены</div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {clubs.map((c) => (
+          <EntityCard entity={c} href={`/clubs/${c.code}`} />
+        ))}
+      </div>
+    )}
+  </div>
+</SiteLayout>

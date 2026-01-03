@@ -1,0 +1,129 @@
+---
+// src/pages/hotels/[code].astro
+// Динамическая страница отеля (генерируется из мок-данных).
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import ImageCarousel from '../../components/ImageCarousel.astro'
+import { hotels } from '../../data/hotels'
+import type { PlaceEntity } from '../../types'
+
+export function getStaticPaths() {
+  return hotels.map((hotel) => ({
+    params: { code: hotel.code },
+    props: { hotel },
+  }))
+}
+
+const { hotel } = Astro.props as { hotel: PlaceEntity }
+---
+
+<SiteLayout
+  title={`${hotel.title} | Отели | Ibiza.ru`}
+  description={hotel.summary}
+  canonical={`https://ibiza.ru/hotels/${hotel.code}`}
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs
+        items={[
+          { href: '/', label: 'Главная' },
+          { href: '/hotels', label: 'Отели' },
+          { label: hotel.title },
+        ]}
+      />
+    </div>
+
+    <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold">{hotel.title}</h1>
+      <p class="mt-2 text-base-content/70">{hotel.summary}</p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        {hotel.location ? <span class="badge badge-outline">{hotel.location}</span> : null}
+        {hotel.priceLevel ? (
+          <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{hotel.priceLevel}</span>
+        ) : null}
+        {hotel.stars ? <span class="badge badge-outline">{hotel.stars}★</span> : null}
+        {typeof hotel.rating === 'number' ? (
+          <span class="badge badge-outline">Рейтинг {hotel.rating.toFixed(1)}</span>
+        ) : null}
+      </div>
+    </header>
+
+    <!-- Крупное фото/галерея: слайдер (Embla) -->
+    <ImageCarousel
+      id={`hotel-carousel-${hotel.code}`}
+      images={hotel.galleryImages ?? [hotel.coverImage ?? '/placeholder.jpg']}
+      alt={hotel.title}
+    />
+
+    <!-- Данные страницы в одну колонку -->
+    <div class="mt-10">
+
+      <!-- Пример блока «данные объекта» (после Directus здесь будут реальные поля) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Данные отеля</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Основная информация</h3>
+
+              <dl class="mt-2 space-y-2">
+                {hotel.address ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Адрес</dt>
+                    <dd class="flex-1">{hotel.address}</dd>
+                  </div>
+                ) : null}
+
+                {hotel.checkIn || hotel.checkOut ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Заезд/выезд</dt>
+                    <dd class="flex-1">{hotel.checkIn ?? '—'} / {hotel.checkOut ?? '—'}</dd>
+                  </div>
+                ) : null}
+
+                {hotel.phone ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Телефон</dt>
+                    <dd class="flex-1"><a class="link" href={`tel:${hotel.phone}`}>{hotel.phone}</a></dd>
+                  </div>
+                ) : null}
+
+                {hotel.website ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Сайт</dt>
+                    <dd class="flex-1"><a class="link" href={hotel.website} target="_blank" rel="noreferrer">Перейти</a></dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Удобства</h3>
+              <div class="mt-2 flex flex-wrap gap-2">
+                {(hotel.tags ?? []).length === 0 ? (
+                  <span class="text-base-content/60">Пока нет данных</span>
+                ) : (
+                  (hotel.tags ?? []).map((t) => <span class="badge badge-outline">{t}</span>)
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Карта (прототип) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">На карте</h2>
+        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
+          Карта появится после интеграции (например, Mapbox/Google/Yandex)
+        </div>
+      </div>
+    </div>
+  </div>
+</SiteLayout>

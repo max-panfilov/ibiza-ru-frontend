@@ -1,0 +1,37 @@
+---
+// src/pages/beaches/index.astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import EntityCard from '../../components/EntityCard.astro'
+import { beaches } from '../../data/beaches'
+---
+
+<SiteLayout
+  title="Пляжи Ибицы | Ibiza.ru"
+  description="Лучшие пляжи Ибицы — от популярных туристических до уединённых бухт. (Прототип)"
+  canonical="https://ibiza.ru/beaches"
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs items={[{ href: '/', label: 'Главная' }, { label: 'Пляжи' }]} />
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Пляжи Ибицы</h1>
+      <p class="text-base-content/70 mt-2">
+        Откройте для себя кристально чистые воды и белоснежные пески лучших пляжей острова
+      </p>
+    </div>
+
+    {beaches.length === 0 ? (
+      <div class="text-center py-12 text-base-content/60">Пляжи пока не добавлены</div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {beaches.map((b) => (
+          <EntityCard entity={b} href={`/beaches/${b.code}`} />
+        ))}
+      </div>
+    )}
+  </div>
+</SiteLayout>

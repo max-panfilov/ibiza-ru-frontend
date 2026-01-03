@@ -1,0 +1,43 @@
+---
+// src/layouts/SiteLayout.astro
+// Общий лэйаут для всех страниц прототипа.
+
+import '../styles/global.css'
+
+import SiteHeader from '../components/SiteHeader.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+
+export interface Props {
+  title: string
+  description?: string
+  canonical?: string
+  isHome?: boolean
+}
+
+const { title, description, canonical, isHome = false } = Astro.props
+const currentPath = Astro.url.pathname
+---
+
+<html lang="ru" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    {description ? <meta name="description" content={description} /> : null}
+    {canonical ? <link rel="canonical" href={canonical} /> : null}
+
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+
+  <body class="min-h-screen flex flex-col bg-base-100 text-base-content">
+    <SiteHeader currentPath={currentPath} isHome={isHome} />
+
+    <main class={isHome ? 'flex-1' : 'flex-1 pt-16'}>
+      <slot />
+    </main>
+
+    <SiteFooter />
+  </body>
+</html>

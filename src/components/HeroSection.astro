@@ -1,0 +1,24 @@
+---
+// src/components/HeroSection.astro
+// Первый экран главной страницы.
+---
+
+<section class="relative h-[80vh] min-h-[600px] w-full overflow-hidden">
+  <img
+    src="/images/ibiza-hero.png"
+    alt="Ibiza beaches"
+    class="absolute inset-0 h-full w-full object-cover"
+    loading="eager"
+  />
+
+  <div class="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent">
+    <div class="container mx-auto px-4 relative z-10 flex h-full flex-col items-center justify-center text-center pt-16">
+      <h1 class="max-w-4xl text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+        Откройте для себя магию Ибицы
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg text-white/90">
+        Лучшие пляжи, отели, рестораны, клубы и вечеринки на одном из самых красивых островов Средиземноморья
+      </p>
+    </div>
+  </div>
+</section>

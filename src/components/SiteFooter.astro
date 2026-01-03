@@ -1,0 +1,35 @@
+---
+// src/components/SiteFooter.astro
+// Подвал сайта: ссылки на основные разделы и копирайт.
+
+import { navItems } from '../data/navItems'
+
+const year = new Date().getFullYear()
+---
+
+<footer class="bg-neutral text-neutral-content">
+  <div class="container mx-auto px-4">
+    <!-- Явно задаём 2 колонки на sm+, чтобы ссылки всегда были во второй колонке -->
+    <div class="py-12 grid grid-cols-1 sm:grid-cols-2 gap-10">
+      <aside>
+        <a href="/" class="inline-flex items-center gap-3">
+          <img src="/images/ibiza-logo-white.svg" alt="Ibiza.ru" class="h-8 w-auto" loading="lazy" />
+        </a>
+        <p class="max-w-sm text-neutral-content/70 mt-4">
+          Ваш путеводитель по Ибице — лучшие отели, пляжи, рестораны и клубы.
+        </p>
+      </aside>
+
+      <!-- Ссылки во второй колонке, без заголовка -->
+      <nav class="flex flex-col gap-2 sm:justify-self-end sm:text-right">
+        {navItems.map((item) => (
+          <a class="link link-hover" href={item.href}>{item.label}</a>
+        ))}
+      </nav>
+    </div>
+
+    <div class="border-t border-white/10 py-6 text-center text-neutral-content/70">
+      © {year} Ibiza.ru. Все права защищены.
+    </div>
+  </div>
+</footer>

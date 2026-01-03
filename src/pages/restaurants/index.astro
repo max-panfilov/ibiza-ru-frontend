@@ -1,0 +1,35 @@
+---
+// src/pages/restaurants/index.astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import EntityCard from '../../components/EntityCard.astro'
+import { restaurants } from '../../data/restaurants'
+---
+
+<SiteLayout
+  title="Рестораны Ибицы | Ibiza.ru"
+  description="Лучшие рестораны Ибицы — от высокой кухни до аутентичных местных кафе. (Прототип)"
+  canonical="https://ibiza.ru/restaurants"
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs items={[{ href: '/', label: 'Главная' }, { label: 'Рестораны' }]} />
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Рестораны Ибицы</h1>
+      <p class="text-base-content/70 mt-2">Изысканная кухня и потрясающие виды в лучших ресторанах острова</p>
+    </div>
+
+    {restaurants.length === 0 ? (
+      <div class="text-center py-12 text-base-content/60">Рестораны пока не добавлены</div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {restaurants.map((r) => (
+          <EntityCard entity={r} href={`/restaurants/${r.code}`} />
+        ))}
+      </div>
+    )}
+  </div>
+</SiteLayout>

@@ -1,0 +1,35 @@
+---
+// src/pages/hotels/index.astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import EntityCard from '../../components/EntityCard.astro'
+import { hotels } from '../../data/hotels'
+---
+
+<SiteLayout
+  title="Отели Ибицы | Ibiza.ru"
+  description="Лучшие отели Ибицы — от роскошных курортов до уютных бутик-отелей. (Прототип)"
+  canonical="https://ibiza.ru/hotels"
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs items={[{ href: '/', label: 'Главная' }, { label: 'Отели' }]} />
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Отели Ибицы</h1>
+      <p class="text-base-content/70 mt-2">Лучшие места для проживания на острове</p>
+    </div>
+
+    {hotels.length === 0 ? (
+      <div class="text-center py-12 text-base-content/60">Отели пока не добавлены</div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {hotels.map((h) => (
+          <EntityCard entity={h} href={`/hotels/${h.code}`} />
+        ))}
+      </div>
+    )}
+  </div>
+</SiteLayout>

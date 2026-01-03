@@ -1,0 +1,128 @@
+---
+// src/pages/restaurants/[code].astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import ImageCarousel from '../../components/ImageCarousel.astro'
+import { restaurants } from '../../data/restaurants'
+import type { PlaceEntity } from '../../types'
+
+export function getStaticPaths() {
+  return restaurants.map((restaurant) => ({
+    params: { code: restaurant.code },
+    props: { restaurant },
+  }))
+}
+
+const { restaurant } = Astro.props as { restaurant: PlaceEntity }
+---
+
+<SiteLayout
+  title={`${restaurant.title} | Рестораны | Ibiza.ru`}
+  description={restaurant.summary}
+  canonical={`https://ibiza.ru/restaurants/${restaurant.code}`}
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs
+        items={[
+          { href: '/', label: 'Главная' },
+          { href: '/restaurants', label: 'Рестораны' },
+          { label: restaurant.title },
+        ]}
+      />
+    </div>
+
+    <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold">{restaurant.title}</h1>
+      <p class="mt-2 text-base-content/70">{restaurant.summary}</p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        {restaurant.location ? <span class="badge badge-outline">{restaurant.location}</span> : null}
+        {restaurant.priceLevel ? (
+          <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{restaurant.priceLevel}</span>
+        ) : null}
+        {typeof restaurant.rating === 'number' ? (
+          <span class="badge badge-outline">Рейтинг {restaurant.rating.toFixed(1)}</span>
+        ) : null}
+        {restaurant.openingHours ? <span class="badge badge-outline">{restaurant.openingHours}</span> : null}
+      </div>
+    </header>
+
+    <!-- Крупное фото/галерея: слайдер (Embla) -->
+    <ImageCarousel
+      id={`restaurant-carousel-${restaurant.code}`}
+      images={restaurant.galleryImages ?? [restaurant.coverImage ?? '/placeholder.jpg']}
+      alt={restaurant.title}
+    />
+
+    <!-- Данные страницы в одну колонку -->
+    <div class="mt-10">
+
+      <!-- Пример блока «данные ресторана» (как будет выглядеть после интеграции) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Данные ресторана</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Контакты и режим</h3>
+
+              <dl class="mt-2 space-y-2">
+                {restaurant.address ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Адрес</dt>
+                    <dd class="flex-1">{restaurant.address}</dd>
+                  </div>
+                ) : null}
+
+                {restaurant.openingHours ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Время</dt>
+                    <dd class="flex-1">{restaurant.openingHours}</dd>
+                  </div>
+                ) : null}
+
+                {restaurant.phone ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Телефон</dt>
+                    <dd class="flex-1"><a class="link" href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></dd>
+                  </div>
+                ) : null}
+
+                {restaurant.website ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Сайт</dt>
+                    <dd class="flex-1"><a class="link" href={restaurant.website} target="_blank" rel="noreferrer">Перейти</a></dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Особенности</h3>
+              <div class="mt-2 flex flex-wrap gap-2">
+                {(restaurant.tags ?? []).length === 0 ? (
+                  <span class="text-base-content/60">Пока нет данных</span>
+                ) : (
+                  (restaurant.tags ?? []).map((t) => <span class="badge badge-outline">{t}</span>)
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Карта (прототип) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">На карте</h2>
+        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
+          Карта появится после интеграции (например, Mapbox/Google/Yandex)
+        </div>
+      </div>
+    </div>
+  </div>
+</SiteLayout>

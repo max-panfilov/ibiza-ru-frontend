@@ -1,0 +1,67 @@
+---
+// src/pages/beaches/[code].astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import { beaches } from '../../data/beaches'
+import type { PlaceEntity } from '../../types'
+
+export function getStaticPaths() {
+  return beaches.map((beach) => ({
+    params: { code: beach.code },
+    props: { beach },
+  }))
+}
+
+const { beach } = Astro.props as { beach: PlaceEntity }
+---
+
+<SiteLayout
+  title={`${beach.title} | Пляжи | Ibiza.ru`}
+  description={beach.summary}
+  canonical={`https://ibiza.ru/beaches/${beach.code}`}
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs
+        items={[
+          { href: '/', label: 'Главная' },
+          { href: '/beaches', label: 'Пляжи' },
+          { label: beach.title },
+        ]}
+      />
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div class="lg:col-span-1">
+        <img
+          src={beach.coverImage ?? '/placeholder.jpg'}
+          alt={beach.title}
+          class="w-full rounded-2xl border border-base-200"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="lg:col-span-2">
+        <h1 class="text-3xl font-bold">{beach.title}</h1>
+        <p class="mt-2 text-base-content/70">{beach.summary}</p>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          {beach.location ? <span class="badge badge-outline">{beach.location}</span> : null}
+        </div>
+
+        <div class="mt-8">
+          <h2 class="text-xl font-semibold mb-3">Информация (прототип)</h2>
+          <p class="text-base-content/70 leading-7">
+            Здесь будут удобства, советы, как добраться, карта и галерея фотографий.
+          </p>
+        </div>
+
+        <div class="mt-8 flex gap-3">
+          <button class="btn btn-primary">Показать на карте</button>
+          <a class="btn btn-ghost" href="/beaches">Назад к списку</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</SiteLayout>

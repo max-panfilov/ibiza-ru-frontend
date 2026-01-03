@@ -1,0 +1,41 @@
+---
+// src/pages/party-schedule/index.astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import { partyEvents } from '../../data/partyEvents'
+import { formatDateTimeRu } from '../../lib/formatDate'
+---
+
+<SiteLayout
+  title="Расписание вечеринок | Ibiza.ru"
+  description="Актуальное расписание всех вечеринок и мероприятий на острове (прототип)"
+  canonical="https://ibiza.ru/party-schedule"
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs items={[{ href: '/', label: 'Главная' }, { label: 'Вечеринки' }]} />
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Расписание вечеринок</h1>
+      <p class="text-base-content/70 mt-2">Актуальное расписание всех вечеринок и мероприятий на острове</p>
+    </div>
+
+    {partyEvents.length === 0 ? (
+      <div class="text-center py-12 text-base-content/60">Вечеринки пока не добавлены</div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {partyEvents.map((e) => (
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h2 class="card-title">{e.title}</h2>
+              <div class="text-sm text-base-content/60">{formatDateTimeRu(e.startsAt)}{e.venue ? <span> · {e.venue}</span> : null}</div>
+              <p class="text-base-content/70">{e.summary}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</SiteLayout>

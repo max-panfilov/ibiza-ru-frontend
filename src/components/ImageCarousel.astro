@@ -1,0 +1,218 @@
+---
+// src/components/ImageCarousel.astro
+// Карусель изображений на Embla (vanilla JS).
+// Используем на детальных страницах отеля/ресторана для крупного фото + переключение.
+
+export interface Props {
+  id: string
+  images: string[]
+  alt?: string
+}
+
+const { id, images, alt = 'Фото' } = Astro.props
+const safeImages = (images ?? []).filter(Boolean)
+---
+
+<div id={id} class="embla" data-embla>
+  <!-- Большая галерея -->
+  <div class="relative">
+    <div class="embla__viewport overflow-hidden rounded-2xl border border-base-200 bg-base-200/20">
+      <div class="embla__container flex">
+        {safeImages.length === 0 ? (
+          <div class="embla__slide flex-[0_0_100%] min-w-0">
+            <div class="aspect-[16/9] md:aspect-[21/9] flex items-center justify-center text-base-content/60">
+              Нет фото
+            </div>
+          </div>
+        ) : (
+          safeImages.map((src, idx) => (
+            <div class="embla__slide flex-[0_0_100%] min-w-0">
+              <img
+                src={src}
+                alt={`${alt} ${idx + 1}`}
+                class="w-full aspect-[16/9] md:aspect-[21/9] object-cover"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+              />
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+
+    <!-- Премиальные контролы поверх изображения -->
+    {safeImages.length > 1 ? (
+      <>
+        <button
+          type="button"
+          class="embla__prev btn btn-circle btn-sm absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 border-white/20 text-white backdrop-blur hover:bg-black/60"
+          aria-label="Предыдущее фото"
+        >
+          ‹
+        </button>
+
+        <button
+          type="button"
+          class="embla__next btn btn-circle btn-sm absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 border-white/20 text-white backdrop-blur hover:bg-black/60"
+          aria-label="Следующее фото"
+        >
+          ›
+        </button>
+
+        <div class="absolute inset-x-0 bottom-3 px-3">
+          <div class="grid grid-cols-3 items-center">
+            <div />
+
+            <div class="embla__dots flex items-center justify-center gap-2" aria-label="Навигация по слайдам"></div>
+
+            <div class="flex justify-end">
+              <div class="embla__counter text-xs text-white bg-black/50 border border-white/10 px-2 py-1 rounded-full backdrop-blur" aria-label="Счётчик изображений">
+                1 / 1
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    ) : null}
+  </div>
+
+  <!-- Миниатюры (thumbs) -->
+  {safeImages.length > 1 ? (
+    <div class="mt-4 embla-thumbs">
+      <div class="embla-thumbs__viewport overflow-hidden">
+        <div class="embla-thumbs__container flex gap-3">
+          {safeImages.map((src, idx) => (
+            <div class="embla-thumbs__slide flex-[0_0_28%] sm:flex-[0_0_18%] md:flex-[0_0_14%] min-w-0">
+              <button
+                type="button"
+                class="embla__thumb w-full overflow-hidden rounded-xl border border-base-200 ring-2 ring-transparent opacity-70 hover:opacity-100 transition"
+                aria-label={`Открыть фото ${idx + 1}`}
+              >
+                <img src={src} alt={`${alt} миниатюра ${idx + 1}`} class="w-full aspect-[4/3] object-cover" loading="lazy" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : null}
+</div>
+
+<script>
+  import EmblaCarousel from 'embla-carousel'
+
+  // Скрипт рендерится сразу после разметки карусели.
+  // Поэтому можем найти корневой элемент через document.currentScript.
+  const scriptEl = document.currentScript
+  const rootNode = scriptEl?.previousElementSibling
+
+  if (!(rootNode instanceof HTMLElement)) {
+    // Нечего инициализировать
+  } else {
+    // Защита от двойной инициализации.
+    if (rootNode.dataset.emblaInit === '1') {
+      // already initialized
+    } else {
+      rootNode.dataset.emblaInit = '1'
+
+      const viewportNode = rootNode.querySelector('.embla__viewport')
+      const prevBtn = rootNode.querySelector('.embla__prev')
+      const nextBtn = rootNode.querySelector('.embla__next')
+      const dotsNode = rootNode.querySelector('.embla__dots')
+      const counterNode = rootNode.querySelector('.embla__counter')
+
+      const thumbsViewportNode = rootNode.querySelector('.embla-thumbs__viewport')
+      const thumbButtons = Array.from(rootNode.querySelectorAll('.embla__thumb'))
+
+      if (viewportNode) {
+        const embla = EmblaCarousel(viewportNode, { loop: true })
+
+        // Вторая карусель для миниатюр (dragFree, чтобы скролл был «живым»).
+        const emblaThumbs = thumbsViewportNode
+          ? EmblaCarousel(thumbsViewportNode, { dragFree: true, containScroll: 'keepSnaps' })
+          : null
+
+        const updateButtons = () => {
+          if (prevBtn instanceof HTMLButtonElement) prevBtn.disabled = !embla.canScrollPrev()
+          if (nextBtn instanceof HTMLButtonElement) nextBtn.disabled = !embla.canScrollNext()
+        }
+
+        const renderDots = () => {
+          if (!dotsNode) return
+          dotsNode.innerHTML = ''
+
+          embla.scrollSnapList().forEach((_, index) => {
+            const dot = document.createElement('button')
+            dot.type = 'button'
+            dot.className = 'embla__dot h-2 w-2 rounded-full bg-white/40 hover:bg-white/70 transition'
+            dot.setAttribute('aria-label', `Перейти к фото ${index + 1}`)
+            dot.addEventListener('click', () => embla.scrollTo(index))
+            dotsNode.appendChild(dot)
+          })
+        }
+
+        const updateDots = () => {
+          if (!dotsNode) return
+          const selected = embla.selectedScrollSnap()
+          const dots = dotsNode.querySelectorAll('.embla__dot')
+          dots.forEach((dot, idx) => {
+            dot.classList.toggle('bg-white', idx === selected)
+            dot.classList.toggle('bg-white/40', idx !== selected)
+            dot.classList.toggle('scale-110', idx === selected)
+          })
+        }
+
+        const updateCounter = () => {
+          if (!counterNode) return
+          const selected = embla.selectedScrollSnap()
+          const total = embla.scrollSnapList().length
+          counterNode.textContent = `${selected + 1} / ${total}`
+        }
+
+        const updateThumbs = () => {
+          if (thumbButtons.length === 0) return
+          const selected = embla.selectedScrollSnap()
+
+          thumbButtons.forEach((btn, idx) => {
+            btn.classList.toggle('ring-primary', idx === selected)
+            btn.classList.toggle('opacity-100', idx === selected)
+            btn.classList.toggle('opacity-70', idx !== selected)
+            btn.setAttribute('aria-current', idx === selected ? 'true' : 'false')
+          })
+
+          // Подстраиваем ленту миниатюр под выбранное фото.
+          emblaThumbs?.scrollTo(selected)
+        }
+
+        // Навигация кнопками
+        if (prevBtn instanceof HTMLButtonElement) prevBtn.addEventListener('click', () => embla.scrollPrev())
+        if (nextBtn instanceof HTMLButtonElement) nextBtn.addEventListener('click', () => embla.scrollNext())
+
+        // Навигация кликом по миниатюрам
+        thumbButtons.forEach((btn, idx) => {
+          if (!(btn instanceof HTMLButtonElement)) return
+          btn.addEventListener('click', () => embla.scrollTo(idx))
+        })
+
+        const syncUi = () => {
+          updateButtons()
+          updateDots()
+          updateCounter()
+          updateThumbs()
+        }
+
+        embla.on('init', () => {
+          renderDots()
+          syncUi()
+        })
+
+        embla.on('select', () => {
+          syncUi()
+        })
+
+        // Инициализация.
+        renderDots()
+        syncUi()
+      }
+    }
+  }
+</script>

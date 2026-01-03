@@ -1,0 +1,47 @@
+---
+// src/pages/articles/index.astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import { articles } from '../../data/articles'
+import { formatDateRu } from '../../lib/formatDate'
+---
+
+<SiteLayout
+  title="Статьи об Ибице | Ibiza.ru"
+  description="Интересные статьи, обзоры и рекомендации об отдыхе на Ибице (прототип)"
+  canonical="https://ibiza.ru/articles"
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs items={[{ href: '/', label: 'Главная' }, { label: 'Статьи' }]} />
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Статьи об Ибице</h1>
+      <p class="text-base-content/70 mt-2">Интересные статьи, обзоры и рекомендации об отдыхе на Ибице</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {articles.length === 0 ? (
+        <div class="col-span-full text-center text-base-content/60 py-12">Нет статей для отображения</div>
+      ) : (
+        articles.map((a) => (
+          <a
+            href={`/articles/${a.code}`}
+            class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow"
+          >
+            <figure class="aspect-[16/9]">
+              <img src={a.coverImage ?? '/placeholder.jpg'} alt={a.title} class="h-full w-full object-cover" loading="lazy" />
+            </figure>
+            <div class="card-body">
+              <h2 class="card-title leading-snug">{a.title}</h2>
+              <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
+              <p class="text-base-content/70">{a.summary}</p>
+            </div>
+          </a>
+        ))
+      )}
+    </div>
+  </div>
+</SiteLayout>

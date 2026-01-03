@@ -1,0 +1,68 @@
+---
+// src/pages/clubs/[code].astro
+
+import SiteLayout from '../../layouts/SiteLayout.astro'
+import Breadcrumbs from '../../components/Breadcrumbs.astro'
+import { clubs } from '../../data/clubs'
+import type { PlaceEntity } from '../../types'
+
+export function getStaticPaths() {
+  return clubs.map((club) => ({
+    params: { code: club.code },
+    props: { club },
+  }))
+}
+
+const { club } = Astro.props as { club: PlaceEntity }
+---
+
+<SiteLayout
+  title={`${club.title} | Клубы | Ibiza.ru`}
+  description={club.summary}
+  canonical={`https://ibiza.ru/clubs/${club.code}`}
+>
+  <div class="container mx-auto px-4 py-10">
+    <div class="mb-6">
+      <Breadcrumbs
+        items={[
+          { href: '/', label: 'Главная' },
+          { href: '/clubs', label: 'Клубы' },
+          { label: club.title },
+        ]}
+      />
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div class="lg:col-span-1">
+        <img
+          src={club.coverImage ?? '/placeholder.jpg'}
+          alt={club.title}
+          class="w-full rounded-2xl border border-base-200"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="lg:col-span-2">
+        <h1 class="text-3xl font-bold">{club.title}</h1>
+        <p class="mt-2 text-base-content/70">{club.summary}</p>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          {club.location ? <span class="badge badge-outline">{club.location}</span> : null}
+          {club.priceLevel ? <span class="badge badge-outline">{club.priceLevel}</span> : null}
+        </div>
+
+        <div class="mt-8">
+          <h2 class="text-xl font-semibold mb-3">События / детали (прототип)</h2>
+          <p class="text-base-content/70 leading-7">
+            Здесь будут вечеринки, расписание, билеты, карта и галерея.
+          </p>
+        </div>
+
+        <div class="mt-8 flex gap-3">
+          <button class="btn btn-primary">Смотреть вечеринки</button>
+          <a class="btn btn-ghost" href="/clubs">Назад к списку</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</SiteLayout>
