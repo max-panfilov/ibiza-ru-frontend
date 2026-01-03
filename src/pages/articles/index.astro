@@ -4,6 +4,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import { articleRepository } from '@/entities/article/api/articleRepository'
+import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
 
 let articles = []
