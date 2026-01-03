@@ -2,9 +2,20 @@
 // src/pages/beaches/index.astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import EntityCard from '../../components/EntityCard.astro'
-import { beaches } from '../../data/beaches'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import EntityCard from '@/shared/ui/EntityCard.astro'
+import { beachRepository } from '@/entities/beach/api/beachRepository'
+import { logApiError } from '@/shared/api/errors'
+
+let beaches = []
+let error: string | null = null
+
+try {
+  beaches = await beachRepository.getAll()
+} catch (err) {
+  logApiError(err)
+  error = 'Не удалось загрузить список пляжей'
+}
 ---
 
 <SiteLayout

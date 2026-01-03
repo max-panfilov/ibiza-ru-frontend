@@ -2,19 +2,26 @@
 // src/pages/restaurants/[code].astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import ImageCarousel from '../../components/ImageCarousel.astro'
-import { restaurants } from '../../data/restaurants'
-import type { PlaceEntity } from '../../types'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
+import { logApiError } from '@/shared/api/errors'
+import type { Restaurant } from '@/entities/restaurant/model/types'
 
-export function getStaticPaths() {
-  return restaurants.map((restaurant) => ({
-    params: { code: restaurant.code },
-    props: { restaurant },
-  }))
+export async function getStaticPaths() {
+  try {
+    const restaurants = await restaurantRepository.getAll()
+    return restaurants.map((restaurant) => ({
+      params: { code: restaurant.code },
+      props: { restaurant },
+    }))
+  } catch (error) {
+    logApiError(error)
+    return []
+  }
 }
 
-const { restaurant } = Astro.props as { restaurant: PlaceEntity }
+const { restaurant } = Astro.props as { restaurant: Restaurant }
+---
 ---
 
 <SiteLayout

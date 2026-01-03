@@ -2,9 +2,20 @@
 // src/pages/hotels/index.astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import EntityCard from '../../components/EntityCard.astro'
-import { hotels } from '../../data/hotels'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import EntityCard from '@/shared/ui/EntityCard.astro'
+import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
+import { logApiError } from '@/shared/api/errors'
+
+let hotels = []
+let error: string | null = null
+
+try {
+  hotels = await hotelRepository.getAll()
+} catch (err) {
+  logApiError(err)
+  error = 'Не удалось загрузить список отелей'
+}
 ---
 
 <SiteLayout
@@ -22,7 +33,11 @@ import { hotels } from '../../data/hotels'
       <p class="text-base-content/70 mt-2">Лучшие места для проживания на острове</p>
     </div>
 
-    {hotels.length === 0 ? (
+    {error ? (
+      <div class="alert alert-error">
+        <span>{error}</span>
+      </div>
+    ) : hotels.length === 0 ? (
       <div class="text-center py-12 text-base-content/60">Отели пока не добавлены</div>
     ) : (
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

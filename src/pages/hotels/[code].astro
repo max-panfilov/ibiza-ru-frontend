@@ -1,21 +1,27 @@
 ---
 // src/pages/hotels/[code].astro
-// Динамическая страница отеля (генерируется из мок-данных).
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import ImageCarousel from '../../components/ImageCarousel.astro'
-import { hotels } from '../../data/hotels'
-import type { PlaceEntity } from '../../types'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
+import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
+import { logApiError } from '@/shared/api/errors'
+import type { Hotel } from '@/entities/hotel/model/types'
 
-export function getStaticPaths() {
-  return hotels.map((hotel) => ({
-    params: { code: hotel.code },
-    props: { hotel },
-  }))
+export async function getStaticPaths() {
+  try {
+    const hotels = await hotelRepository.getAll()
+    return hotels.map((hotel) => ({
+      params: { code: hotel.code },
+      props: { hotel },
+    }))
+  } catch (error) {
+    logApiError(error)
+    return []
+  }
 }
 
-const { hotel } = Astro.props as { hotel: PlaceEntity }
+const { hotel } = Astro.props as { hotel: Hotel }
 ---
 
 <SiteLayout

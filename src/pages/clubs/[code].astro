@@ -2,18 +2,26 @@
 // src/pages/clubs/[code].astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import { clubs } from '../../data/clubs'
-import type { PlaceEntity } from '../../types'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import { clubRepository } from '@/entities/club/api/clubRepository'
+import { NotFoundError, logApiError } from '@/shared/api/errors'
+import type { Club } from '@/entities/club/model/types'
 
-export function getStaticPaths() {
-  return clubs.map((club) => ({
-    params: { code: club.code },
-    props: { club },
-  }))
+// Генерация статических путей для SSG
+export async function getStaticPaths() {
+  try {
+    const clubs = await clubRepository.getAll()
+    return clubs.map((club) => ({
+      params: { code: club.code },
+      props: { club },
+    }))
+  } catch (error) {
+    logApiError(error)
+    return []
+  }
 }
 
-const { club } = Astro.props as { club: PlaceEntity }
+const { club } = Astro.props as { club: Club }
 ---
 
 <SiteLayout

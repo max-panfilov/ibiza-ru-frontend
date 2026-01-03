@@ -2,8 +2,8 @@
 // src/pages/clubs/index.astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import EntityCard from '../../components/EntityCard.astro'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import EntityCard from '@/shared/ui/EntityCard.astro'
 import { clubs } from '../../data/clubs'
 ---
 
@@ -22,7 +22,11 @@ import { clubs } from '../../data/clubs'
       <p class="text-base-content/70 mt-2">Легендарные ночные клубы и лучшие диджеи со всего мира</p>
     </div>
 
-    {clubs.length === 0 ? (
+    {error ? (
+      <div class="alert alert-error">
+        <span>{error}</span>
+      </div>
+    ) : clubs.length === 0 ? (
       <div class="text-center py-12 text-base-content/60">Клубы пока не добавлены</div>
     ) : (
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

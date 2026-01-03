@@ -2,9 +2,20 @@
 // src/pages/articles/index.astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import { articles } from '../../data/articles'
-import { formatDateRu } from '../../lib/formatDate'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import { articleRepository } from '@/entities/article/api/articleRepository'
+import { logApiError } from '@/shared/api/errors'
+
+let articles = []
+let error: string | null = null
+
+try {
+  articles = await articleRepository.getAll()
+} catch (err) {
+  logApiError(err)
+  error = 'Не удалось загрузить список статей'
+}
+---
 ---
 
 <SiteLayout

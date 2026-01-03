@@ -2,16 +2,23 @@
 // src/pages/articles/[code].astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import { articles } from '../../data/articles'
-import { formatDateRu } from '../../lib/formatDate'
-import type { Article } from '../../types'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import { articleRepository } from '@/entities/article/api/articleRepository'
+import { formatDateRu } from '@/shared/lib/formatDate'
+import { logApiError } from '@/shared/api/errors'
+import type { Article } from '@/entities/article/model/types'
 
-export function getStaticPaths() {
-  return articles.map((article) => ({
-    params: { code: article.code },
-    props: { article },
-  }))
+export async function getStaticPaths() {
+  try {
+    const articles = await articleRepository.getAll()
+    return articles.map((article) => ({
+      params: { code: article.code },
+      props: { article },
+    }))
+  } catch (error) {
+    logApiError(error)
+    return []
+  }
 }
 
 const { article } = Astro.props as { article: Article }

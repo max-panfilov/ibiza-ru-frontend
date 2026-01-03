@@ -2,9 +2,20 @@
 // src/pages/restaurants/index.astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import EntityCard from '../../components/EntityCard.astro'
-import { restaurants } from '../../data/restaurants'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import EntityCard from '@/shared/ui/EntityCard.astro'
+import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
+import { logApiError } from '@/shared/api/errors'
+
+let restaurants = []
+let error: string | null = null
+
+try {
+  restaurants = await restaurantRepository.getAll()
+} catch (err) {
+  logApiError(err)
+  error = 'Не удалось загрузить список ресторанов'
+}
 ---
 
 <SiteLayout

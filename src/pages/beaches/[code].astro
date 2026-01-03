@@ -2,18 +2,25 @@
 // src/pages/beaches/[code].astro
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
-import Breadcrumbs from '../../components/Breadcrumbs.astro'
-import { beaches } from '../../data/beaches'
-import type { PlaceEntity } from '../../types'
+import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import { beachRepository } from '@/entities/beach/api/beachRepository'
+import { logApiError } from '@/shared/api/errors'
+import type { Beach } from '@/entities/beach/model/types'
 
-export function getStaticPaths() {
-  return beaches.map((beach) => ({
-    params: { code: beach.code },
-    props: { beach },
-  }))
+export async function getStaticPaths() {
+  try {
+    const beaches = await beachRepository.getAll()
+    return beaches.map((beach) => ({
+      params: { code: beach.code },
+      props: { beach },
+    }))
+  } catch (error) {
+    logApiError(error)
+    return []
+  }
 }
 
-const { beach } = Astro.props as { beach: PlaceEntity }
+const { beach } = Astro.props as { beach: Beach }
 ---
 
 <SiteLayout
