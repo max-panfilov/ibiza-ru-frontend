@@ -8,12 +8,12 @@ import { restaurantRepository } from '@/entities/restaurant/api/restaurantReposi
 import { logApiError } from '@/shared/api/errors'
 import type { Restaurant } from '@/entities/restaurant/model/types'
 
+// Генерируем только коды ресторанов, а полные данные подтягиваем через getByCode
 export async function getStaticPaths() {
   try {
-    const restaurants = await restaurantRepository.getAll()
+    const restaurants = await restaurantRepository.getAll({ fields: ['code'] })
     return restaurants.map((restaurant) => ({
       params: { code: restaurant.code },
-      props: { restaurant },
     }))
   } catch (error) {
     logApiError(error)
@@ -21,8 +21,15 @@ export async function getStaticPaths() {
   }
 }
 
-const { restaurant } = Astro.props as { restaurant: Restaurant }
----
+const { code } = Astro.params as { code: string }
+let restaurant: Restaurant
+
+try {
+  restaurant = await restaurantRepository.getByCode(code)
+} catch (error) {
+  logApiError(error)
+  throw error
+}
 ---
 
 <SiteLayout

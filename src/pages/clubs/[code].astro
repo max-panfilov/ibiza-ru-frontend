@@ -3,17 +3,17 @@
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
 import { clubRepository } from '@/entities/club/api/clubRepository'
-import { NotFoundError, logApiError } from '@/shared/api/errors'
+import { logApiError } from '@/shared/api/errors'
 import type { Club } from '@/entities/club/model/types'
 
-// Генерация статических путей для SSG
+// Генерация статических путей для SSG — только коды клубов, без тяжёлой галереи
 export async function getStaticPaths() {
   try {
-    const clubs = await clubRepository.getAll()
+    const clubs = await clubRepository.getAll({ fields: ['code'] })
     return clubs.map((club) => ({
       params: { code: club.code },
-      props: { club },
     }))
   } catch (error) {
     logApiError(error)
@@ -21,7 +21,15 @@ export async function getStaticPaths() {
   }
 }
 
-const { club } = Astro.props as { club: Club }
+const { code } = Astro.params as { code: string }
+let club: Club
+
+try {
+  club = await clubRepository.getByCode(code)
+} catch (error) {
+  logApiError(error)
+  throw error
+}
 ---
 
 <SiteLayout
@@ -40,35 +48,87 @@ const { club } = Astro.props as { club: Club }
       />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-      <div class="lg:col-span-1">
-        <img
-          src={club.coverImage?.url ?? '/placeholder.jpg'}
-          alt={club.title}
-          class="w-full rounded-2xl border border-base-200"
-          loading="lazy"
-        />
+    <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold">{club.title}</h1>
+      <p class="mt-2 text-base-content/70">{club.description}</p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        {club.address ? <span class="badge badge-outline">{club.address}</span> : null}
+        {club.priceRange ? (
+          <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{club.priceRange}</span>
+        ) : null}
+        {club.entryFee ? <span class="badge badge-outline">Вход: {club.entryFee}</span> : null}
+      </div>
+    </header>
+
+    <!-- Крупное фото/галерея: слайдер (Embla) -->
+    <ImageCarousel
+      id={`club-carousel-${club.code}`}
+      images={club.images?.map((img) => img.url) ?? (club.coverImage?.url ? [club.coverImage.url] : ['/placeholder.jpg'])}
+      alt={club.title}
+    />
+
+    <!-- Данные страницы в одну колонку -->
+    <div class="mt-10">
+
+      <!-- Пример блока «данные клуба» (как будет выглядеть после интеграции) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Данные клуба</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Основная информация</h3>
+
+              <dl class="mt-2 space-y-2">
+                {club.address ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Адрес</dt>
+                    <dd class="flex-1">{club.address}</dd>
+                  </div>
+                ) : null}
+
+                {club.phone ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Телефон</dt>
+                    <dd class="flex-1"><a class="link" href={`tel:${club.phone}`}>{club.phone}</a></dd>
+                  </div>
+                ) : null}
+
+                {club.website ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Сайт</dt>
+                    <dd class="flex-1"><a class="link" href={club.website} target="_blank" rel="noreferrer">Перейти</a></dd>
+                  </div>
+                ) : null}
+
+                {club.entryFee ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Вход</dt>
+                    <dd class="flex-1">{club.entryFee}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Особенности</h3>
+              <p class="mt-2 text-base-content/70">
+                Здесь появятся данные о музыке, диджеях, типе публики и расписании событий.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="lg:col-span-2">
-        <h1 class="text-3xl font-bold">{club.title}</h1>
-        <p class="mt-2 text-base-content/70">{club.description}</p>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          {club.address ? <span class="badge badge-outline">{club.address}</span> : null}
-          {club.priceRange ? <span class="badge badge-outline">{club.priceRange}</span> : null}
-        </div>
-
-        <div class="mt-8">
-          <h2 class="text-xl font-semibold mb-3">События / детали (прототип)</h2>
-          <p class="text-base-content/70 leading-7">
-            Здесь будут вечеринки, расписание, билеты, карта и галерея.
-          </p>
-        </div>
-
-        <div class="mt-8 flex gap-3">
-          <button class="btn btn-primary">Смотреть вечеринки</button>
-          <a class="btn btn-ghost" href="/clubs">Назад к списку</a>
+      <!-- Карта (прототип) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">На карте</h2>
+        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
+          Карта появится после интеграции (например, Mapbox/Google/Yandex)
         </div>
       </div>
     </div>

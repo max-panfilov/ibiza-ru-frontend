@@ -6,12 +6,17 @@ import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
 import { mapPlaceDto } from '@/shared/lib/mapPlaceDto'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
+import { pickRandomItems } from '@/shared/lib/random'
 import type { HotelDTO, QueryParams } from '@/shared/api/types'
 import type { Hotel } from '../model/types'
 
 export interface IHotelRepository {
   getAll(params?: QueryParams): Promise<Hotel[]>
   getByCode(code: string): Promise<Hotel>
+  /**
+   * Вернуть до трёх случайных отелей для главной страницы.
+   */
+  getRandom3(): Promise<Hotel[]>
 }
 
 function mapDtoToDomain(dto: HotelDTO): Hotel {
@@ -91,6 +96,13 @@ class HotelRepository implements IHotelRepository {
       logApiError(apiError)
       throw apiError
     }
+  }
+
+  async getRandom3(): Promise<Hotel[]> {
+    // Берём ограниченную выборку отелей и уже по ней делаем случайный выбор
+    const SAMPLE_SIZE = 20
+    const hotels = await this.getAll({ limit: SAMPLE_SIZE, sort: ['-created_at'] })
+    return pickRandomItems(hotels, 3)
   }
 }
 

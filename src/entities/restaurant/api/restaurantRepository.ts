@@ -6,12 +6,17 @@ import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
 import { mapPlaceDto } from '@/shared/lib/mapPlaceDto'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
+import { pickRandomItems } from '@/shared/lib/random'
 import type { RestaurantDTO, QueryParams } from '@/shared/api/types'
 import type { Restaurant } from '../model/types'
 
 export interface IRestaurantRepository {
   getAll(params?: QueryParams): Promise<Restaurant[]>
   getByCode(code: string): Promise<Restaurant>
+  /**
+   * Вернуть до трёх случайных ресторанов для главной страницы.
+   */
+  getRandom3(): Promise<Restaurant[]>
 }
 
 function mapDtoToDomain(dto: RestaurantDTO): Restaurant {
@@ -87,6 +92,13 @@ class RestaurantRepository implements IRestaurantRepository {
       logApiError(apiError)
       throw apiError
     }
+  }
+
+  async getRandom3(): Promise<Restaurant[]> {
+    // Берём ограниченную выборку ресторанов и уже по ней делаем случайный выбор
+    const SAMPLE_SIZE = 20
+    const restaurants = await this.getAll({ limit: SAMPLE_SIZE, sort: ['-created_at'] })
+    return pickRandomItems(restaurants, 3)
   }
 }
 

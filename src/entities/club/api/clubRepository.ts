@@ -7,6 +7,7 @@ import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
 import { mapPlaceDto } from '@/shared/lib/mapPlaceDto'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
+import { pickRandomItems } from '@/shared/lib/random'
 import type { ClubDTO, QueryParams } from '@/shared/api/types'
 import type { Club } from '../model/types'
 
@@ -17,6 +18,10 @@ import type { Club } from '../model/types'
 export interface IClubRepository {
   getAll(params?: QueryParams): Promise<Club[]>
   getByCode(code: string): Promise<Club>
+  /**
+   * Вернуть до трёх случайных клубов для главной страницы.
+   */
+  getRandom3(): Promise<Club[]>
 }
 
 /**
@@ -115,6 +120,13 @@ class ClubRepository implements IClubRepository {
       logApiError(apiError)
       throw apiError
     }
+  }
+
+  async getRandom3(): Promise<Club[]> {
+    // Берём ограниченную выборку клубов и уже по ней делаем случайный выбор
+    const SAMPLE_SIZE = 20
+    const clubs = await this.getAll({ limit: SAMPLE_SIZE, sort: ['-created_at'] })
+    return pickRandomItems(clubs, 3)
   }
 }
 

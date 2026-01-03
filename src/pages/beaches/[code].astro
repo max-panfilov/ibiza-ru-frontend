@@ -3,16 +3,17 @@
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
 import { beachRepository } from '@/entities/beach/api/beachRepository'
 import { logApiError } from '@/shared/api/errors'
 import type { Beach } from '@/entities/beach/model/types'
 
+// Для путей берём только коды пляжей, галерею и прочие данные подтягиваем через getByCode
 export async function getStaticPaths() {
   try {
-    const beaches = await beachRepository.getAll()
+    const beaches = await beachRepository.getAll({ fields: ['code'] })
     return beaches.map((beach) => ({
       params: { code: beach.code },
-      props: { beach },
     }))
   } catch (error) {
     logApiError(error)
@@ -20,7 +21,15 @@ export async function getStaticPaths() {
   }
 }
 
-const { beach } = Astro.props as { beach: Beach }
+const { code } = Astro.params as { code: string }
+let beach: Beach
+
+try {
+  beach = await beachRepository.getByCode(code)
+} catch (error) {
+  logApiError(error)
+  throw error
+}
 ---
 
 <SiteLayout
@@ -39,34 +48,69 @@ const { beach } = Astro.props as { beach: Beach }
       />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-      <div class="lg:col-span-1">
-        <img
-          src={beach.coverImage ?? '/placeholder.jpg'}
-          alt={beach.title}
-          class="w-full rounded-2xl border border-base-200"
-          loading="lazy"
-        />
+    <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold">{beach.title}</h1>
+      <p class="mt-2 text-base-content/70">{beach.description}</p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        {beach.location ? <span class="badge badge-outline">{beach.location}</span> : null}
+      </div>
+    </header>
+
+    <!-- Крупное фото/галерея: слайдер (Embla) -->
+    <ImageCarousel
+      id={`beach-carousel-${beach.code}`}
+      images={beach.images?.map((img) => img.url) ?? (beach.coverImage?.url ? [beach.coverImage.url] : ['/placeholder.jpg'])}
+      alt={beach.title}
+    />
+
+    <!-- Данные страницы в одну колонку -->
+    <div class="mt-10">
+
+      <!-- Пример блока «данные пляжа» (как будет выглядеть после интеграции) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Данные пляжа</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Основная информация</h3>
+
+              <dl class="mt-2 space-y-2">
+                {beach.location ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Локация</dt>
+                    <dd class="flex-1">{beach.location}</dd>
+                  </div>
+                ) : null}
+
+                {typeof beach.latitude === 'number' && typeof beach.longitude === 'number' ? (
+                  <div class="flex gap-2">
+                    <dt class="w-28 text-base-content/60">Координаты</dt>
+                    <dd class="flex-1">{beach.latitude}, {beach.longitude}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Особенности</h3>
+              <p class="mt-2 text-base-content/70">
+                Здесь появятся данные об удобствах, инфраструктуре, безопасности и рекомендациях для отдыха.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="lg:col-span-2">
-        <h1 class="text-3xl font-bold">{beach.title}</h1>
-        <p class="mt-2 text-base-content/70">{beach.summary}</p>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          {beach.location ? <span class="badge badge-outline">{beach.location}</span> : null}
-        </div>
-
-        <div class="mt-8">
-          <h2 class="text-xl font-semibold mb-3">Информация (прототип)</h2>
-          <p class="text-base-content/70 leading-7">
-            Здесь будут удобства, советы, как добраться, карта и галерея фотографий.
-          </p>
-        </div>
-
-        <div class="mt-8 flex gap-3">
-          <button class="btn btn-primary">Показать на карте</button>
-          <a class="btn btn-ghost" href="/beaches">Назад к списку</a>
+      <!-- Карта (прототип) -->
+      <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">На карте</h2>
+        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
+          Карта появится после интеграции (например, Mapbox/Google/Yandex)
         </div>
       </div>
     </div>

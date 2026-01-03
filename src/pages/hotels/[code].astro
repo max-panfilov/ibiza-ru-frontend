@@ -8,12 +8,12 @@ import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
 import { logApiError } from '@/shared/api/errors'
 import type { Hotel } from '@/entities/hotel/model/types'
 
+// Генерируем только коды отелей, без тяжёлых данных (галереи подтягиваем через getByCode)
 export async function getStaticPaths() {
   try {
-    const hotels = await hotelRepository.getAll()
+    const hotels = await hotelRepository.getAll({ fields: ['code'] })
     return hotels.map((hotel) => ({
       params: { code: hotel.code },
-      props: { hotel },
     }))
   } catch (error) {
     logApiError(error)
@@ -21,7 +21,15 @@ export async function getStaticPaths() {
   }
 }
 
-const { hotel } = Astro.props as { hotel: Hotel }
+const { code } = Astro.params as { code: string }
+let hotel: Hotel
+
+try {
+  hotel = await hotelRepository.getByCode(code)
+} catch (error) {
+  logApiError(error)
+  throw error
+}
 ---
 
 <SiteLayout

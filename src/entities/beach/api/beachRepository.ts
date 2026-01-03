@@ -6,12 +6,17 @@ import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
 import { getCoverImage, mapAllImages } from '@/shared/lib/imageHelpers'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
+import { pickRandomItems } from '@/shared/lib/random'
 import type { BeachDTO, QueryParams } from '@/shared/api/types'
 import type { Beach } from '../model/types'
 
 export interface IBeachRepository {
   getAll(params?: QueryParams): Promise<Beach[]>
   getByCode(code: string): Promise<Beach>
+  /**
+   * Вернуть до трёх случайных пляжей для главной страницы.
+   */
+  getRandom3(): Promise<Beach[]>
 }
 
 function mapDtoToDomain(dto: BeachDTO): Beach {
@@ -96,6 +101,13 @@ class BeachRepository implements IBeachRepository {
       logApiError(apiError)
       throw apiError
     }
+  }
+
+  async getRandom3(): Promise<Beach[]> {
+    // Берём ограниченную выборку пляжей и уже по ней делаем случайный выбор
+    const SAMPLE_SIZE = 20
+    const beaches = await this.getAll({ limit: SAMPLE_SIZE, sort: ['-created_at'] })
+    return pickRandomItems(beaches, 3)
   }
 }
 

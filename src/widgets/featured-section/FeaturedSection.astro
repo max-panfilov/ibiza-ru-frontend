@@ -1,62 +1,127 @@
 ---
 // src/components/FeaturedSection.astro
-// Блок «Исследуйте Ибицу» с карточками категорий.
+// Блок «Исследуйте Ибицу» с реальными объектами (отели, пляжи, рестораны, клубы).
+// Вместо четырёх абстрактных плашек показываем по 3 случайных объекта каждой категории.
 
-const categories = [
-  {
-    title: 'Отели',
-    description: 'Лучшие места для проживания на Ибице — от роскошных курортов до уютных бутик-отелей',
-    href: '/hotels',
-    icon: '🏨',
-  },
-  {
-    title: 'Пляжи',
-    description: 'Откройте для себя кристально чистые воды и белоснежные пески лучших пляжей острова',
-    href: '/beaches',
-    icon: '🏖️',
-  },
-  {
-    title: 'Рестораны',
-    description: 'Изысканная кухня и потрясающие виды в лучших ресторанах Ибицы',
-    href: '/restaurants',
-    icon: '🍽️',
-  },
-  {
-    title: 'Клубы',
-    description: 'Легендарные ночные клубы и лучшие диджеи со всего мира',
-    href: '/clubs',
-    icon: '🎧',
-  },
-]
+import EntityCard from '@/shared/ui/EntityCard.astro'
+import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
+import { beachRepository } from '@/entities/beach/api/beachRepository'
+import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
+import { clubRepository } from '@/entities/club/api/clubRepository'
+import { logApiError } from '@/shared/api/errors'
+
+// Загружаем случайные сущности через репозитории доменного слоя
+// Каждый репозиторий сам решает, как именно выбирать случайные записи (инкапсуляция логики)
+let featuredHotels = []
+let featuredBeaches = []
+let featuredRestaurants = []
+let featuredClubs = []
+
+try {
+  // Получаем до трёх случайных отелей
+  featuredHotels = await hotelRepository.getRandom3()
+} catch (error) {
+  // Логируем ошибку, но не ломаем главную — просто не покажем блок категории
+  logApiError(error)
+}
+
+try {
+  // Получаем до трёх случайных пляжей
+  featuredBeaches = await beachRepository.getRandom3()
+} catch (error) {
+  logApiError(error)
+}
+
+try {
+  // Получаем до трёх случайных ресторанов
+  featuredRestaurants = await restaurantRepository.getRandom3()
+} catch (error) {
+  logApiError(error)
+}
+
+try {
+  // Получаем до трёх случайных клубов
+  featuredClubs = await clubRepository.getRandom3()
+} catch (error) {
+  logApiError(error)
+}
 ---
 
-<section class="py-20 bg-base-100">
-  <div class="container mx-auto px-4">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Исследуйте Ибицу</h2>
-      <p class="mt-4 text-lg text-base-content/70 max-w-2xl mx-auto">
-        Все, что вам нужно для идеального отдыха на острове — от роскошных отелей до легендарных клубов
-      </p>
-    </div>
+<div class="space-y-12">
+  {featuredHotels.length > 0 && (
+    <section class="container mx-auto px-4 py-10">
+      <h2 class="text-4xl font-bold mb-8 text-center">Отели</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-      {categories.map((c) => (
-        <a href={c.href} class="card bg-base-100 border border-base-200 hover:shadow-md transition-shadow">
-          <div class="card-body">
-            <div class="mb-2 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary text-2xl">
-              {c.icon}
-            </div>
-            <h3 class="card-title">{c.title}</h3>
-            <p class="text-base-content/70">{c.description}</p>
-            <div class="card-actions mt-4">
-              <span class="btn btn-ghost w-full justify-between">
-                <span>Подробнее</span>
-                <span aria-hidden="true">→</span>
-              </span>
-            </div>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {featuredHotels.map((hotel: any) => (
+          // Используем стандартную карточку сущности, как в списках
+          <EntityCard entity={hotel} href={`/hotels/${hotel.code}`} />
+        ))}
+      </div>
+
+      <div class="text-center mt-6">
+        <a href="/hotels" class="btn btn-outline gap-2">
+          <span>Все отели</span>
+          <span aria-hidden="true">→</span>
         </a>
-      ))}
-    </div>
-  </div>
-</section>
+      </div>
+    </section>
+  )}
+
+  {featuredBeaches.length > 0 && (
+    <section class="container mx-auto px-4 py-10">
+      <h2 class="text-4xl font-bold mb-8 text-center">Пляжи</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {featuredBeaches.map((beach: any) => (
+          <EntityCard entity={beach} href={`/beaches/${beach.code}`} />
+        ))}
+      </div>
+
+      <div class="text-center mt-6">
+        <a href="/beaches" class="btn btn-outline gap-2">
+          <span>Все пляжи</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  )}
+
+  {featuredRestaurants.length > 0 && (
+    <section class="container mx-auto px-4 py-10">
+      <h2 class="text-4xl font-bold mb-8 text-center">Рестораны</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {featuredRestaurants.map((restaurant: any) => (
+          <EntityCard entity={restaurant} href={`/restaurants/${restaurant.code}`} />
+        ))}
+      </div>
+
+      <div class="text-center mt-6">
+        <a href="/restaurants" class="btn btn-outline gap-2">
+          <span>Все рестораны</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  )}
+
+  {featuredClubs.length > 0 && (
+    <section class="container mx-auto px-4 py-10">
+      <h2 class="text-4xl font-bold mb-8 text-center">Клубы</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {featuredClubs.map((club: any) => (
+          <EntityCard entity={club} href={`/clubs/${club.code}`} />
+        ))}
+      </div>
+
+      <div class="text-center mt-6">
+        <a href="/clubs" class="btn btn-outline gap-2">
+          <span>Все клубы</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  )}
+</div>
