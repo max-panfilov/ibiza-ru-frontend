@@ -4,7 +4,18 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import EntityCard from '@/shared/ui/EntityCard.astro'
-import { clubs } from '../../data/clubs'
+import { clubRepository } from '@/entities/club/api/clubRepository'
+import { logApiError } from '@/shared/api/errors'
+
+let clubs = []
+let error: string | null = null
+
+try {
+  clubs = await clubRepository.getAll()
+} catch (err) {
+  logApiError(err)
+  error = 'Не удалось загрузить список клубов'
+}
 ---
 
 <SiteLayout

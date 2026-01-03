@@ -1,8 +1,8 @@
 ---
-// src/components/SiteHeader.astro
+// src/widgets/site-header/SiteHeader.astro
 // Шапка сайта: фиксированная, с адаптивным меню.
 
-import { navItems } from '../data/navItems'
+import { Icon } from 'astro-icon/components'
 
 export interface Props {
   currentPath: string
@@ -12,6 +12,17 @@ export interface Props {
 const { currentPath, isHome = false } = Astro.props
 
 const isActive = (href: string) => currentPath === href
+
+// Навигационные элементы меню
+const navItems = [
+  { href: '/', label: 'Главная' },
+  { href: '/clubs', label: 'Клубы' },
+  { href: '/hotels', label: 'Отели' },
+  { href: '/beaches', label: 'Пляжи' },
+  { href: '/restaurants', label: 'Рестораны' },
+  { href: '/articles', label: 'Статьи' },
+  { href: '/party-schedule', label: 'Вечеринки' },
+]
 ---
 
 <header
@@ -29,16 +40,7 @@ const isActive = (href: string) => currentPath === href
       <div class="navbar-start w-full lg:w-1/2">
         <div class="dropdown">
           <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
-            <!-- Иконка «бургер» без сторонних зависимостей -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Icon name="lucide:menu" class="h-6 w-6" />
           </div>
           <ul
             tabindex="0"

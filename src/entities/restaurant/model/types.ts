@@ -1,18 +1,19 @@
 // src/entities/restaurant/model/types.ts
 // Доменные типы для ресторанов (Clean Architecture - Entities layer)
 
+import type { DomainImage } from '@/shared/lib/imageHelpers'
+
 export interface Restaurant {
   code: string
   title: string
-  summary: string
-  coverImage?: string
-  location?: string
+  description?: string
+  coverImage?: DomainImage
   address?: string
+  latitude?: number
+  longitude?: number
   phone?: string
+  email?: string
   website?: string
-  priceLevel?: '€' | '€€' | '€€€' | '€€€€'
-  rating?: number
-  openingHours?: string
-  tags?: string[]
-  galleryImages?: string[]
+  priceRange?: string
+  images?: DomainImage[]
 }

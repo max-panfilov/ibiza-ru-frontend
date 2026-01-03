@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
+    "@iconify-json/lucide": "^1.2.82",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
+    "astro-icon": "^1.1.5",
     "daisyui": "^5.5.14",
     "embla-carousel": "^8.6.0",
     "tailwindcss": "^4.1.18"

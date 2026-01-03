@@ -1,5 +1,6 @@
 // src/shared/api/types.ts
 // Базовые типы для Directus API схемы
+// Основано на docs/frontend-api.md
 
 /**
  * Схема Directus коллекций
@@ -9,108 +10,130 @@
  * При изменении схемы в Directus необходимо обновить эти типы.
  */
 export interface DirectusSchema {
-  // Коллекция клубов
   clubs: ClubDTO[]
-  
-  // Коллекция отелей
   hotels: HotelDTO[]
-  
-  // Коллекция пляжей
   beaches: BeachDTO[]
-  
-  // Коллекция ресторанов
   restaurants: RestaurantDTO[]
-  
-  // Коллекция статей
   articles: ArticleDTO[]
+  party_schedule: PartyScheduleDTO[]
   
-  // Коллекция вечеринок
-  party_events: PartyEventDTO[]
+  // Junction таблицы для изображений
+  club_images: ImageJunctionDTO[]
+  hotel_images: ImageJunctionDTO[]
+  beach_images: ImageJunctionDTO[]
+  restaurant_images: ImageJunctionDTO[]
+  article_images: ImageJunctionDTO[]
+  party_images: ImageJunctionDTO[]
+}
+
+/**
+ * Базовый DTO для файлов из directus_files
+ */
+export interface DirectusFileDTO {
+  id: string // UUID
+  filename_download: string
+  width?: number
+  height?: number
+  filesize?: number
+  type?: string
+}
+
+/**
+ * DTO для junction таблиц изображений
+ */
+export interface ImageJunctionDTO {
+  id: string // UUID
+  file_id: string | DirectusFileDTO // UUID или вложенный объект
+  sort?: number
+  alt_text?: string
+  is_cover?: boolean
+  created_at?: string
 }
 
 /**
  * Базовый DTO для всех сущностей типа "место"
  */
 export interface PlaceDTO {
-  id: number
-  status: 'draft' | 'published' | 'archived'
+  id: string // UUID
+  name: string
+  description?: string
   code: string
-  title: string
-  summary: string
-  cover_image?: string
-  location?: string
   address?: string
+  latitude?: number
+  longitude?: number
   phone?: string
+  email?: string
   website?: string
-  price_level?: '€' | '€€' | '€€€' | '€€€€'
-  rating?: number
-  tags?: string[]
-  gallery_images?: string[]
-  date_created?: string
-  date_updated?: string
+  price_range?: string
+  created_at?: string
+  updated_at?: string
+  // Связанные изображения (O2M)
+  images?: ImageJunctionDTO[]
 }
 
 /**
  * DTO для клубов из Directus
  */
 export interface ClubDTO extends PlaceDTO {
-  // Специфичные поля для клубов (если есть)
+  entry_fee?: string
 }
 
 /**
  * DTO для отелей из Directus
  */
 export interface HotelDTO extends PlaceDTO {
-  stars?: number
-  check_in?: string
-  check_out?: string
+  star_rating?: number
 }
 
 /**
  * DTO для пляжей из Directus
  */
-export interface BeachDTO extends PlaceDTO {
-  // Специфичные поля для пляжей (если есть)
+export interface BeachDTO extends Omit<PlaceDTO, 'address' | 'phone' | 'email' | 'website' | 'price_range'> {
+  location?: string
 }
 
 /**
  * DTO для ресторанов из Directus
  */
 export interface RestaurantDTO extends PlaceDTO {
-  opening_hours?: string
+  // Наследует все поля из PlaceDTO
 }
 
 /**
  * DTO для статей из Directus
  */
 export interface ArticleDTO {
-  id: number
-  status: 'draft' | 'published' | 'archived'
-  code: string
+  id: string // UUID
   title: string
   summary: string
-  cover_image?: string
-  content_html: string
-  published_at?: string
+  content: string // HTML контент
+  code: string
   author?: string
-  date_created?: string
-  date_updated?: string
+  published_at?: string
+  cover_file_id?: string | DirectusFileDTO // UUID или вложенный объект
+  created_at?: string
+  updated_at?: string
+  // Связанные изображения (O2M)
+  images?: ImageJunctionDTO[]
 }
 
 /**
- * DTO для вечеринок из Directus
+ * DTO для party_schedule из Directus
  */
-export interface PartyEventDTO {
-  id: number
-  status: 'draft' | 'published' | 'archived'
-  code: string
-  title: string
-  summary: string
-  cover_image?: string
-  starts_at: string
-  venue?: string
-  date_created?: string
-  date_updated?: string
+export interface PartyScheduleDTO {
+  id: string // UUID
+  event_name: string
+  club_id?: string // UUID ссылка на clubs.id
+  date?: string
+  start_time?: string
+  end_time?: string
+  description?: string
+  ticket_price?: string
+  ticket_link?: string
+  created_at?: string
+  updated_at?: string
+  // Связанные изображения (O2M)
+  images?: ImageJunctionDTO[]
 }
 
 /**

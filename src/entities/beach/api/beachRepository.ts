@@ -4,6 +4,8 @@
 import { readItems } from '@directus/sdk'
 import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
+import { getCoverImage, mapAllImages } from '@/shared/lib/imageHelpers'
+import { cleanQueryParams } from '@/shared/api/queryHelpers'
 import type { BeachDTO, QueryParams } from '@/shared/api/types'
 import type { Beach } from '../model/types'
 
@@ -15,30 +17,41 @@ export interface IBeachRepository {
 function mapDtoToDomain(dto: BeachDTO): Beach {
   return {
     code: dto.code,
-    title: dto.title,
-    summary: dto.summary,
-    coverImage: dto.cover_image,
+    title: dto.name,
+    description: dto.description,
+    coverImage: getCoverImage(dto.images),
     location: dto.location,
-    priceLevel: dto.price_level,
-    rating: dto.rating,
-    tags: dto.tags,
-    galleryImages: dto.gallery_images,
+    latitude: dto.latitude,
+    longitude: dto.longitude,
+    images: mapAllImages(dto.images),
   }
 }
 
 class BeachRepository implements IBeachRepository {
   async getAll(params?: QueryParams): Promise<Beach[]> {
     try {
-      const filter = params?.filter || { status: { _eq: 'published' } }
-      
       const beaches = await directusClient.request(
-        readItems('beaches', {
-          filter,
-          sort: (params?.sort as any) || ['-date_created'],
+        readItems('beaches', cleanQueryParams({
+          filter: params?.filter,
+          sort: (params?.sort as any) || ['-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || ['*'],
-        })
+          fields: (params?.fields as any) || [
+            '*',
+            'images.id',
+            'images.file_id.id',
+            'images.file_id.filename_download',
+            'images.sort',
+            'images.alt_text',
+            'images.is_cover',
+          ],
+          deep: {
+            images: {
+              _sort: ['sort'],
+              _limit: 1,
+            },
+          },
+        }) as any)
       ) as unknown as BeachDTO[]
 
       return beaches.map(mapDtoToDomain)
@@ -55,11 +68,20 @@ class BeachRepository implements IBeachRepository {
         readItems('beaches', {
           filter: {
             code: { _eq: code },
-            status: { _eq: 'published' },
           },
           limit: 1,
-        })
-      )
+          fields: [
+            '*',
+            'images.*',
+            'images.file_id.*',
+          ] as any,
+          deep: {
+            images: {
+              _sort: ['sort'],
+            },
+          },
+        } as any)
+      ) as unknown as BeachDTO[]
 
       if (!beaches || beaches.length === 0) {
         throw new NotFoundError('Пляж', code)

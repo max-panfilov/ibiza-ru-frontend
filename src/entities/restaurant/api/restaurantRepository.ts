@@ -4,6 +4,8 @@
 import { readItems } from '@directus/sdk'
 import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
+import { getCoverImage, mapAllImages } from '@/shared/lib/imageHelpers'
+import { cleanQueryParams } from '@/shared/api/queryHelpers'
 import type { RestaurantDTO, QueryParams } from '@/shared/api/types'
 import type { Restaurant } from '../model/types'
 
@@ -15,34 +17,45 @@ export interface IRestaurantRepository {
 function mapDtoToDomain(dto: RestaurantDTO): Restaurant {
   return {
     code: dto.code,
-    title: dto.title,
-    summary: dto.summary,
-    coverImage: dto.cover_image,
-    location: dto.location,
+    title: dto.name,
+    description: dto.description,
+    coverImage: getCoverImage(dto.images),
     address: dto.address,
+    latitude: dto.latitude,
+    longitude: dto.longitude,
     phone: dto.phone,
+    email: dto.email,
     website: dto.website,
-    priceLevel: dto.price_level,
-    rating: dto.rating,
-    openingHours: dto.opening_hours,
-    tags: dto.tags,
-    galleryImages: dto.gallery_images,
+    priceRange: dto.price_range,
+    images: mapAllImages(dto.images),
   }
 }
 
 class RestaurantRepository implements IRestaurantRepository {
   async getAll(params?: QueryParams): Promise<Restaurant[]> {
     try {
-      const filter = params?.filter || { status: { _eq: 'published' } }
-      
       const restaurants = await directusClient.request(
-        readItems('restaurants', {
-          filter,
-          sort: (params?.sort as any) || ['-date_created'],
+        readItems('restaurants', cleanQueryParams({
+          filter: params?.filter,
+          sort: (params?.sort as any) || ['-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || ['*'],
-        })
+          fields: (params?.fields as any) || [
+            '*',
+            'images.id',
+            'images.file_id.id',
+            'images.file_id.filename_download',
+            'images.sort',
+            'images.alt_text',
+            'images.is_cover',
+          ],
+          deep: {
+            images: {
+              _sort: ['sort'],
+              _limit: 1,
+            },
+          },
+        }) as any)
       ) as unknown as RestaurantDTO[]
 
       return restaurants.map(mapDtoToDomain)
@@ -59,11 +72,20 @@ class RestaurantRepository implements IRestaurantRepository {
         readItems('restaurants', {
           filter: {
             code: { _eq: code },
-            status: { _eq: 'published' },
           },
           limit: 1,
-        })
-      )
+          fields: [
+            '*',
+            'images.*',
+            'images.file_id.*',
+          ] as any,
+          deep: {
+            images: {
+              _sort: ['sort'],
+            },
+          },
+        } as any)
+      ) as unknown as RestaurantDTO[]
 
       if (!restaurants || restaurants.length === 0) {
         throw new NotFoundError('Ресторан', code)

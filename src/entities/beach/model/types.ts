@@ -1,14 +1,15 @@
 // src/entities/beach/model/types.ts
 // Доменные типы для пляжей (Clean Architecture - Entities layer)
 
+import type { DomainImage } from '@/shared/lib/imageHelpers'
+
 export interface Beach {
   code: string
   title: string
-  summary: string
-  coverImage?: string
+  description?: string
+  coverImage?: DomainImage
   location?: string
-  priceLevel?: '€' | '€€' | '€€€' | '€€€€'
-  rating?: number
-  tags?: string[]
-  galleryImages?: string[]
+  latitude?: number
+  longitude?: number
+  images?: DomainImage[]
 }

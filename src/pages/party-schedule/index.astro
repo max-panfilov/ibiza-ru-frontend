@@ -3,7 +3,7 @@
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
-import { partyEventRepository } from '@/entities/party-event/api/partyEventRepository'
+import { partyScheduleRepository } from '@/entities/party-schedule/api/partyScheduleRepository'
 import { formatDateTimeRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
 
@@ -11,7 +11,7 @@ let partyEvents = []
 let error: string | null = null
 
 try {
-  partyEvents = await partyEventRepository.getAll()
+  partyEvents = await partyScheduleRepository.getAll()
 } catch (err) {
   logApiError(err)
   error = 'Не удалось загрузить список вечеринок'
@@ -44,9 +44,13 @@ try {
         {partyEvents.map((e) => (
           <div class="card bg-base-100 border border-base-200">
             <div class="card-body">
-              <h2 class="card-title">{e.title}</h2>
-              <div class="text-sm text-base-content/60">{formatDateTimeRu(e.startsAt)}{e.venue ? <span> · {e.venue}</span> : null}</div>
-              <p class="text-base-content/70">{e.summary}</p>
+              <h2 class="card-title">{e.eventName}</h2>
+              <div class="text-sm text-base-content/60">
+                {e.date ? formatDateTimeRu(e.date) : null}
+                {e.startTime ? <span> {e.startTime}</span> : null}
+              </div>
+              {e.description && <p class="text-base-content/70">{e.description}</p>}
+              {e.ticketPrice && <div class="text-sm font-semibold">От {e.ticketPrice}</div>}
             </div>
           </div>
         ))}

@@ -4,6 +4,8 @@
 import { readItems } from '@directus/sdk'
 import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
+import { extractFileUrl, mapAllImages } from '@/shared/lib/imageHelpers'
+import { cleanQueryParams } from '@/shared/api/queryHelpers'
 import type { ArticleDTO, QueryParams } from '@/shared/api/types'
 import type { Article } from '../model/types'
 
@@ -17,26 +19,44 @@ function mapDtoToDomain(dto: ArticleDTO): Article {
     code: dto.code,
     title: dto.title,
     summary: dto.summary,
-    coverImage: dto.cover_image,
-    contentHtml: dto.content_html,
-    publishedAt: dto.published_at,
+    content: dto.content,
     author: dto.author,
+    publishedAt: dto.published_at,
+    coverImage: dto.cover_file_id ? {
+      id: typeof dto.cover_file_id === 'string' ? dto.cover_file_id : dto.cover_file_id.id,
+      url: extractFileUrl(dto.cover_file_id),
+    } : undefined,
+    images: mapAllImages(dto.images),
   }
 }
 
 class ArticleRepository implements IArticleRepository {
   async getAll(params?: QueryParams): Promise<Article[]> {
     try {
-      const filter = params?.filter || { status: { _eq: 'published' } }
-      
       const articles = await directusClient.request(
-        readItems('articles', {
-          filter,
-          sort: (params?.sort as any) || ['-published_at', '-date_created'],
+        readItems('articles', cleanQueryParams({
+          filter: params?.filter,
+          sort: (params?.sort as any) || ['-published_at', '-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || ['*'],
-        })
+          fields: (params?.fields as any) || [
+            '*',
+            'cover_file_id.id',
+            'cover_file_id.filename_download',
+            'images.id',
+            'images.file_id.id',
+            'images.file_id.filename_download',
+            'images.sort',
+            'images.alt_text',
+            'images.is_cover',
+          ],
+          deep: {
+            images: {
+              _sort: ['sort'],
+              _limit: 3,
+            },
+          },
+        }) as any)
       ) as unknown as ArticleDTO[]
 
       return articles.map(mapDtoToDomain)
@@ -53,11 +73,21 @@ class ArticleRepository implements IArticleRepository {
         readItems('articles', {
           filter: {
             code: { _eq: code },
-            status: { _eq: 'published' },
           },
           limit: 1,
-        })
-      )
+          fields: [
+            '*',
+            'cover_file_id.*',
+            'images.*',
+            'images.file_id.*',
+          ] as any,
+          deep: {
+            images: {
+              _sort: ['sort'],
+            },
+          },
+        } as any)
+      ) as unknown as ArticleDTO[]
 
       if (!articles || articles.length === 0) {
         throw new NotFoundError('Статья', code)

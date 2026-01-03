@@ -26,7 +26,7 @@ const { restaurant } = Astro.props as { restaurant: Restaurant }
 
 <SiteLayout
   title={`${restaurant.title} | Рестораны | Ibiza.ru`}
-  description={restaurant.summary}
+  description={restaurant.description}
   canonical={`https://ibiza.ru/restaurants/${restaurant.code}`}
 >
   <div class="container mx-auto px-4 py-10">
@@ -43,7 +43,7 @@ const { restaurant } = Astro.props as { restaurant: Restaurant }
     <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
     <header class="mb-6">
       <h1 class="text-3xl font-bold">{restaurant.title}</h1>
-      <p class="mt-2 text-base-content/70">{restaurant.summary}</p>
+      <p class="mt-2 text-base-content/70">{restaurant.description}</p>
 
       <div class="mt-4 flex flex-wrap gap-2">
         {restaurant.location ? <span class="badge badge-outline">{restaurant.location}</span> : null}
@@ -60,7 +60,7 @@ const { restaurant } = Astro.props as { restaurant: Restaurant }
     <!-- Крупное фото/галерея: слайдер (Embla) -->
     <ImageCarousel
       id={`restaurant-carousel-${restaurant.code}`}
-      images={restaurant.galleryImages ?? [restaurant.coverImage ?? '/placeholder.jpg']}
+      images={restaurant.images?.map(img => img.url) ?? (restaurant.coverImage?.url ? [restaurant.coverImage.url] : ['/placeholder.jpg'])}
       alt={restaurant.title}
     />
 

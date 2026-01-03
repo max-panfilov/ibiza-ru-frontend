@@ -1,10 +1,19 @@
 ---
-// src/components/SiteFooter.astro
+// src/widgets/site-footer/SiteFooter.astro
 // Подвал сайта: ссылки на основные разделы и копирайт.
 
-import { navItems } from '../data/navItems'
-
 const year = new Date().getFullYear()
+
+// Навигационные элементы
+const navItems = [
+  { href: '/', label: 'Главная' },
+  { href: '/clubs', label: 'Клубы' },
+  { href: '/hotels', label: 'Отели' },
+  { href: '/beaches', label: 'Пляжи' },
+  { href: '/restaurants', label: 'Рестораны' },
+  { href: '/articles', label: 'Статьи' },
+  { href: '/party-schedule', label: 'Вечеринки' },
+]
 ---
 
 <footer class="bg-neutral text-neutral-content">
