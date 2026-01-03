@@ -55,8 +55,8 @@ const { club } = Astro.props as { club: Club }
         <p class="mt-2 text-base-content/70">{club.description}</p>
 
         <div class="mt-4 flex flex-wrap gap-2">
-          {club.location ? <span class="badge badge-outline">{club.location}</span> : null}
-          {club.priceLevel ? <span class="badge badge-outline">{club.priceLevel}</span> : null}
+          {club.address ? <span class="badge badge-outline">{club.address}</span> : null}
+          {club.priceRange ? <span class="badge badge-outline">{club.priceRange}</span> : null}
         </div>
 
         <div class="mt-8">

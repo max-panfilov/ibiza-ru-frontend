@@ -34,12 +34,13 @@ class PartyScheduleRepository implements IPartyScheduleRepository {
   async getAll(params?: QueryParams): Promise<PartySchedule[]> {
     try {
       const events = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('party_schedule', cleanQueryParams({
           filter: params?.filter,
-          sort: (params?.sort as any) || ['start_time'],
+          sort: params?.sort || ['start_time'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || [
+          fields: params?.fields || [
             '*',
             'images.id',
             'images.file_id.id',
@@ -54,7 +55,7 @@ class PartyScheduleRepository implements IPartyScheduleRepository {
               _limit: 1,
             },
           },
-        }) as any)
+        }))
       ) as unknown as PartyScheduleDTO[]
 
       return events.map(mapDtoToDomain)
@@ -68,6 +69,7 @@ class PartyScheduleRepository implements IPartyScheduleRepository {
   async getById(id: string): Promise<PartySchedule> {
     try {
       const events = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('party_schedule', {
           filter: {
             id: { _eq: id },
@@ -77,13 +79,13 @@ class PartyScheduleRepository implements IPartyScheduleRepository {
             '*',
             'images.*',
             'images.file_id.*',
-          ] as any,
+          ],
           deep: {
             images: {
               _sort: ['sort'],
             },
           },
-        } as any)
+        })
       ) as unknown as PartyScheduleDTO[]
 
       if (!events || events.length === 0) {

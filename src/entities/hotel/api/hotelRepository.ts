@@ -4,7 +4,7 @@
 import { readItems } from '@directus/sdk'
 import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
-import { getCoverImage, mapAllImages } from '@/shared/lib/imageHelpers'
+import { mapPlaceDto } from '@/shared/lib/mapPlaceDto'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
 import type { HotelDTO, QueryParams } from '@/shared/api/types'
 import type { Hotel } from '../model/types'
@@ -15,20 +15,10 @@ export interface IHotelRepository {
 }
 
 function mapDtoToDomain(dto: HotelDTO): Hotel {
+  const base = mapPlaceDto(dto)
   return {
-    code: dto.code,
-    title: dto.name,
-    description: dto.description,
-    coverImage: getCoverImage(dto.images),
-    address: dto.address,
-    latitude: dto.latitude,
-    longitude: dto.longitude,
-    phone: dto.phone,
-    email: dto.email,
-    website: dto.website,
-    priceRange: dto.price_range,
+    ...base,
     starRating: dto.star_rating,
-    images: mapAllImages(dto.images),
   }
 }
 
@@ -36,12 +26,13 @@ class HotelRepository implements IHotelRepository {
   async getAll(params?: QueryParams): Promise<Hotel[]> {
     try {
       const hotels = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('hotels', cleanQueryParams({
           filter: params?.filter,
-          sort: (params?.sort as any) || ['-created_at'],
+          sort: params?.sort || ['-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || [
+          fields: params?.fields || [
             '*',
             'images.id',
             'images.file_id.id',
@@ -56,7 +47,7 @@ class HotelRepository implements IHotelRepository {
               _limit: 1,
             },
           },
-        }) as any)
+        }))
       ) as unknown as HotelDTO[]
 
       return hotels.map(mapDtoToDomain)
@@ -70,6 +61,7 @@ class HotelRepository implements IHotelRepository {
   async getByCode(code: string): Promise<Hotel> {
     try {
       const hotels = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('hotels', {
           filter: {
             code: { _eq: code },
@@ -79,13 +71,13 @@ class HotelRepository implements IHotelRepository {
             '*',
             'images.*',
             'images.file_id.*',
-          ] as any,
+          ],
           deep: {
             images: {
               _sort: ['sort'],
             },
           },
-        } as any)
+        })
       ) as unknown as HotelDTO[]
 
       if (!hotels || hotels.length === 0) {

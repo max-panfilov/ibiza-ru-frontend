@@ -34,12 +34,13 @@ class ArticleRepository implements IArticleRepository {
   async getAll(params?: QueryParams): Promise<Article[]> {
     try {
       const articles = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('articles', cleanQueryParams({
           filter: params?.filter,
-          sort: (params?.sort as any) || ['-published_at', '-created_at'],
+          sort: params?.sort || ['-published_at', '-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || [
+          fields: params?.fields || [
             '*',
             'cover_file_id.id',
             'cover_file_id.filename_download',
@@ -56,7 +57,7 @@ class ArticleRepository implements IArticleRepository {
               _limit: 3,
             },
           },
-        }) as any)
+        }))
       ) as unknown as ArticleDTO[]
 
       return articles.map(mapDtoToDomain)
@@ -70,6 +71,7 @@ class ArticleRepository implements IArticleRepository {
   async getByCode(code: string): Promise<Article> {
     try {
       const articles = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('articles', {
           filter: {
             code: { _eq: code },
@@ -80,13 +82,13 @@ class ArticleRepository implements IArticleRepository {
             'cover_file_id.*',
             'images.*',
             'images.file_id.*',
-          ] as any,
+          ],
           deep: {
             images: {
               _sort: ['sort'],
             },
           },
-        } as any)
+        })
       ) as unknown as ArticleDTO[]
 
       if (!articles || articles.length === 0) {

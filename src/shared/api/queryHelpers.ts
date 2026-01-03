@@ -5,14 +5,8 @@
  * Удаляет undefined значения из объекта
  * Directus SDK сериализует undefined как строку "undefined", что вызывает ошибку 400
  */
-export function cleanQueryParams<T extends Record<string, any>>(params: T): Partial<T> {
-  const cleaned: any = {}
-  
-  for (const key in params) {
-    if (params[key] !== undefined) {
-      cleaned[key] = params[key]
-    }
-  }
-  
-  return cleaned
+export function cleanQueryParams<T extends Record<string, unknown>>(params: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== undefined)
+  ) as Partial<T>
 }

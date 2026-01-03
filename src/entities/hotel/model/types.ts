@@ -16,5 +16,5 @@ export interface Hotel {
   website?: string
   priceRange?: string
   starRating?: number
-  images?: DomainImage[]
+  images: DomainImage[]
 }

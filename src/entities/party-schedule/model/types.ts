@@ -14,5 +14,5 @@ export interface PartySchedule {
   ticketPrice?: string
   ticketLink?: string
   coverImage?: DomainImage
-  images?: DomainImage[]
+  images: DomainImage[]
 }

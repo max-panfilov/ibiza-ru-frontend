@@ -6,7 +6,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "typecheck": "tsc --noEmit",
+    "check": "astro check",
+    "lint": "eslint . --ext .ts,.tsx,.astro",
+    "format": "prettier --write \"**/*.{ts,tsx,astro,json,css}\""
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
@@ -17,5 +21,13 @@
     "daisyui": "^5.5.14",
     "embla-carousel": "^8.6.0",
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3"
   }
 }

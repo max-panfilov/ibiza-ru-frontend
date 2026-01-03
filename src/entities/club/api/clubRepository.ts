@@ -5,7 +5,7 @@
 import { readItems } from '@directus/sdk'
 import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
-import { getCoverImage, mapAllImages } from '@/shared/lib/imageHelpers'
+import { mapPlaceDto } from '@/shared/lib/mapPlaceDto'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
 import type { ClubDTO, QueryParams } from '@/shared/api/types'
 import type { Club } from '../model/types'
@@ -24,20 +24,10 @@ export interface IClubRepository {
  * Изолирует доменную логику от деталей API (Clean Architecture)
  */
 function mapDtoToDomain(dto: ClubDTO): Club {
+  const base = mapPlaceDto(dto)
   return {
-    code: dto.code,
-    title: dto.name,
-    description: dto.description,
-    coverImage: getCoverImage(dto.images),
-    address: dto.address,
-    latitude: dto.latitude,
-    longitude: dto.longitude,
-    phone: dto.phone,
-    email: dto.email,
-    website: dto.website,
-    priceRange: dto.price_range,
+    ...base,
     entryFee: dto.entry_fee,
-    images: mapAllImages(dto.images),
   }
 }
 
@@ -53,13 +43,14 @@ class ClubRepository implements IClubRepository {
     try {
       // Запрашиваем клубы с первым изображением для превью
       const clubs = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('clubs', cleanQueryParams({
           filter: params?.filter,
-          sort: (params?.sort as any) || ['-created_at'],
+          sort: params?.sort || ['-created_at'],
           limit: params?.limit,
           offset: params?.offset,
           // Запрашиваем основные поля + одно изображение
-          fields: (params?.fields as any) || [
+          fields: params?.fields || [
             '*',
             'images.id',
             'images.file_id.id',
@@ -75,7 +66,7 @@ class ClubRepository implements IClubRepository {
               _limit: 1,
             },
           },
-        }) as any)
+        }))
       ) as unknown as ClubDTO[]
 
       return clubs.map(mapDtoToDomain)
@@ -93,6 +84,7 @@ class ClubRepository implements IClubRepository {
     try {
       // Запрашиваем клуб со всей галереей
       const clubs = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('clubs', {
           filter: {
             code: { _eq: code },
@@ -102,14 +94,14 @@ class ClubRepository implements IClubRepository {
             '*',
             'images.*',
             'images.file_id.*',
-          ] as any,
+          ],
           // Сортируем все изображения по sort
           deep: {
             images: {
               _sort: ['sort'],
             },
           },
-        } as any)
+        })
       ) as unknown as ClubDTO[]
 
       if (!clubs || clubs.length === 0) {

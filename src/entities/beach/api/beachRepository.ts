@@ -31,12 +31,13 @@ class BeachRepository implements IBeachRepository {
   async getAll(params?: QueryParams): Promise<Beach[]> {
     try {
       const beaches = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('beaches', cleanQueryParams({
           filter: params?.filter,
-          sort: (params?.sort as any) || ['-created_at'],
+          sort: params?.sort || ['-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || [
+          fields: params?.fields || [
             '*',
             'images.id',
             'images.file_id.id',
@@ -51,7 +52,7 @@ class BeachRepository implements IBeachRepository {
               _limit: 1,
             },
           },
-        }) as any)
+        }))
       ) as unknown as BeachDTO[]
 
       return beaches.map(mapDtoToDomain)
@@ -65,6 +66,7 @@ class BeachRepository implements IBeachRepository {
   async getByCode(code: string): Promise<Beach> {
     try {
       const beaches = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('beaches', {
           filter: {
             code: { _eq: code },
@@ -74,13 +76,13 @@ class BeachRepository implements IBeachRepository {
             '*',
             'images.*',
             'images.file_id.*',
-          ] as any,
+          ],
           deep: {
             images: {
               _sort: ['sort'],
             },
           },
-        } as any)
+        })
       ) as unknown as BeachDTO[]
 
       if (!beaches || beaches.length === 0) {

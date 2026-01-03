@@ -49,8 +49,8 @@ export function getCoverImage(images?: ImageJunctionDTO[]): DomainImage | undefi
 /**
  * Мапп все изображения
  */
-export function mapAllImages(images?: ImageJunctionDTO[]): DomainImage[] | undefined {
-  if (!images || images.length === 0) return undefined
+export function mapAllImages(images?: ImageJunctionDTO[]): DomainImage[] {
+  if (!images || images.length === 0) return []
   return images.map(mapImageDto)
 }
 

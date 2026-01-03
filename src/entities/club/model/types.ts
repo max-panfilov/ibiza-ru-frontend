@@ -1,15 +1,7 @@
 // src/entities/club/model/types.ts
 // Доменные типы для клубов (Clean Architecture - Entities layer)
 
-/**
- * Изображение для UI
- */
-export interface ClubImage {
-  id: string
-  url: string // URL для отображения
-  alt?: string
-  isCover?: boolean
-}
+import type { DomainImage } from '@/shared/lib/imageHelpers'
 
 /**
  * Доменная модель клуба
@@ -19,7 +11,7 @@ export interface Club {
   code: string
   title: string
   description?: string
-  coverImage?: ClubImage
+  coverImage?: DomainImage
   address?: string
   latitude?: number
   longitude?: number
@@ -28,5 +20,5 @@ export interface Club {
   website?: string
   priceRange?: string
   entryFee?: string
-  images?: ClubImage[]
+  images: DomainImage[]
 }

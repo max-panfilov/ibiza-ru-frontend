@@ -4,7 +4,7 @@
 import { readItems } from '@directus/sdk'
 import { directusClient } from '@/shared/api/client'
 import { handleApiError, NotFoundError, logApiError } from '@/shared/api/errors'
-import { getCoverImage, mapAllImages } from '@/shared/lib/imageHelpers'
+import { mapPlaceDto } from '@/shared/lib/mapPlaceDto'
 import { cleanQueryParams } from '@/shared/api/queryHelpers'
 import type { RestaurantDTO, QueryParams } from '@/shared/api/types'
 import type { Restaurant } from '../model/types'
@@ -15,32 +15,20 @@ export interface IRestaurantRepository {
 }
 
 function mapDtoToDomain(dto: RestaurantDTO): Restaurant {
-  return {
-    code: dto.code,
-    title: dto.name,
-    description: dto.description,
-    coverImage: getCoverImage(dto.images),
-    address: dto.address,
-    latitude: dto.latitude,
-    longitude: dto.longitude,
-    phone: dto.phone,
-    email: dto.email,
-    website: dto.website,
-    priceRange: dto.price_range,
-    images: mapAllImages(dto.images),
-  }
+  return mapPlaceDto(dto)
 }
 
 class RestaurantRepository implements IRestaurantRepository {
   async getAll(params?: QueryParams): Promise<Restaurant[]> {
     try {
       const restaurants = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('restaurants', cleanQueryParams({
           filter: params?.filter,
-          sort: (params?.sort as any) || ['-created_at'],
+          sort: params?.sort || ['-created_at'],
           limit: params?.limit,
           offset: params?.offset,
-          fields: (params?.fields as any) || [
+          fields: params?.fields || [
             '*',
             'images.id',
             'images.file_id.id',
@@ -55,7 +43,7 @@ class RestaurantRepository implements IRestaurantRepository {
               _limit: 1,
             },
           },
-        }) as any)
+        }))
       ) as unknown as RestaurantDTO[]
 
       return restaurants.map(mapDtoToDomain)
@@ -69,6 +57,7 @@ class RestaurantRepository implements IRestaurantRepository {
   async getByCode(code: string): Promise<Restaurant> {
     try {
       const restaurants = await directusClient.request(
+        // @ts-expect-error Directus SDK типизация не поддерживает динамические коллекции
         readItems('restaurants', {
           filter: {
             code: { _eq: code },
@@ -78,13 +67,13 @@ class RestaurantRepository implements IRestaurantRepository {
             '*',
             'images.*',
             'images.file_id.*',
-          ] as any,
+          ],
           deep: {
             images: {
               _sort: ['sort'],
             },
           },
-        } as any)
+        })
       ) as unknown as RestaurantDTO[]
 
       if (!restaurants || restaurants.length === 0) {

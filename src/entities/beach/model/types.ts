@@ -11,5 +11,5 @@ export interface Beach {
   location?: string
   latitude?: number
   longitude?: number
-  images?: DomainImage[]
+  images: DomainImage[]
 }

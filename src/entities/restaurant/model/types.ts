@@ -15,5 +15,5 @@ export interface Restaurant {
   email?: string
   website?: string
   priceRange?: string
-  images?: DomainImage[]
+  images: DomainImage[]
 }

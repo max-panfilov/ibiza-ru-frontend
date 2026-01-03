@@ -11,5 +11,5 @@ export interface Article {
   author?: string
   publishedAt?: string
   coverImage?: DomainImage
-  images?: DomainImage[]
+  images: DomainImage[]
 }

@@ -10,20 +10,20 @@
  * При изменении схемы в Directus необходимо обновить эти типы.
  */
 export interface DirectusSchema {
-  clubs: ClubDTO[]
-  hotels: HotelDTO[]
-  beaches: BeachDTO[]
-  restaurants: RestaurantDTO[]
-  articles: ArticleDTO[]
-  party_schedule: PartyScheduleDTO[]
+  clubs: ClubDTO
+  hotels: HotelDTO
+  beaches: BeachDTO
+  restaurants: RestaurantDTO
+  articles: ArticleDTO
+  party_schedule: PartyScheduleDTO
   
   // Junction таблицы для изображений
-  club_images: ImageJunctionDTO[]
-  hotel_images: ImageJunctionDTO[]
-  beach_images: ImageJunctionDTO[]
-  restaurant_images: ImageJunctionDTO[]
-  article_images: ImageJunctionDTO[]
-  party_images: ImageJunctionDTO[]
+  club_images: ImageJunctionDTO
+  hotel_images: ImageJunctionDTO
+  beach_images: ImageJunctionDTO
+  restaurant_images: ImageJunctionDTO
+  article_images: ImageJunctionDTO
+  party_images: ImageJunctionDTO
 }
 
 /**

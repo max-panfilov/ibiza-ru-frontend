@@ -56,11 +56,12 @@ export function handleApiError(error: unknown, context?: string): ApiError {
 /**
  * Логирование ошибок API (для дебага)
  */
-export function logApiError(error: ApiError): void {
+export function logApiError(error: unknown): void {
+  const apiError = error instanceof ApiError ? error : handleApiError(error)
   console.error('[API Error]', {
-    name: error.name,
-    message: error.message,
-    statusCode: error.statusCode,
-    originalError: error.originalError,
+    name: apiError.name,
+    message: apiError.message,
+    statusCode: apiError.statusCode,
+    originalError: apiError.originalError,
   })
 }
