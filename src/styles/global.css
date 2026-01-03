@@ -11,6 +11,11 @@ html {
   @apply text-base leading-7;
 }
 
+/* Короткие описания с поддержкой переводов строк (\n -> переносы) */
+.multiline-text {
+  white-space: pre-line; /* не используем @apply, чтобы явно управлять white-space */
+}
+
 .article-content h1 {
   @apply text-3xl font-bold mt-2 mb-4;
 }
@@ -71,4 +76,9 @@ html {
 /* Встраиваемый блок-тизер заведения (отель/ресторан/клуб) */
 .article-place {
   @apply my-8;
+}
+
+/* Заполненные иконки звёзд (lucide:star) */
+.icon-star-filled path {
+  fill: currentColor;
 }

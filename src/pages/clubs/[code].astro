@@ -51,15 +51,21 @@ try {
     <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
     <header class="mb-6">
       <h1 class="text-3xl font-bold">{club.title}</h1>
-      <p class="mt-2 text-base-content/70">{club.description}</p>
 
-      <div class="mt-4 flex flex-wrap gap-2">
-        {club.address ? <span class="badge badge-outline">{club.address}</span> : null}
-        {club.priceRange ? (
+      {/* Под заголовком: прайс на вход (плашка) и адрес текстом рядом */}
+      <div class="mt-3 flex flex-wrap gap-2 items-center text-base-content/70">
+        {club.entryFee ? (
+          <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{club.entryFee}</span>
+        ) : club.priceRange ? (
           <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{club.priceRange}</span>
         ) : null}
-        {club.entryFee ? <span class="badge badge-outline">Вход: {club.entryFee}</span> : null}
+        {club.address ? <span>{club.address}</span> : null}
       </div>
+
+      {/* Анонс клуба с сохранением переводов строк */}
+      {club.description ? (
+        <p class="mt-3 text-base-content/70 multiline-text">{club.description}</p>
+      ) : null}
     </header>
 
     <!-- Крупное фото/галерея: слайдер (Embla) -->
@@ -74,8 +80,6 @@ try {
 
       <!-- Пример блока «данные клуба» (как будет выглядеть после интеграции) -->
       <div class="mt-10">
-        <h2 class="text-xl font-semibold mb-4">Данные клуба</h2>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="card bg-base-100 border border-base-200">
             <div class="card-body">
@@ -99,7 +103,12 @@ try {
                 {club.website ? (
                   <div class="flex gap-2">
                     <dt class="w-28 text-base-content/60">Сайт</dt>
-                    <dd class="flex-1"><a class="link" href={club.website} target="_blank" rel="noreferrer">Перейти</a></dd>
+                    {/* Показываем полный URL сайта клуба и закрываем ссылку от индексации */}
+                    <dd class="flex-1">
+                      <a class="link" href={club.website} target="_blank" rel="noreferrer nofollow">
+                        {club.website}
+                      </a>
+                    </dd>
                   </div>
                 ) : null}
 
@@ -126,7 +135,6 @@ try {
 
       <!-- Карта (прототип) -->
       <div class="mt-10">
-        <h2 class="text-xl font-semibold mb-4">На карте</h2>
         <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
           Карта появится после интеграции (например, Mapbox/Google/Yandex)
         </div>

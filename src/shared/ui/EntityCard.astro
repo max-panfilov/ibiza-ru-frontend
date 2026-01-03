@@ -3,6 +3,7 @@
 // Универсальная карточка для списков (отели/пляжи/рестораны/клубы).
 // Работает с domain моделями: Club, Hotel, Beach, Restaurant
 
+import { Icon } from 'astro-icon/components'
 import type { Club } from '@/entities/club/model/types'
 import type { Hotel } from '@/entities/hotel/model/types'
 import type { Beach } from '@/entities/beach/model/types'
@@ -14,6 +15,23 @@ export interface Props {
 }
 
 const { entity, href } = Astro.props
+
+// Приводим к any, чтобы удобно вытащить общие поля (price / entryFee, address/location) для всех типов сущностей
+const place: any = entity
+// Для клубов используем entryFee ("вход от ..."), для остальных — priceRange
+const priceLabel: string | undefined =
+  typeof place.entryFee === 'string' && place.entryFee?.length
+    ? place.entryFee
+    : place.priceRange
+// Звёздный рейтинг актуален только для отелей (Hotel.starRating)
+const rawStarRating: number | undefined =
+  typeof place.starRating === 'number' ? place.starRating : undefined
+// Преобразуем в количество звёзд (1–5), без дробей
+const starCount: number | undefined =
+  typeof rawStarRating === 'number' && rawStarRating > 0
+    ? Math.min(5, Math.round(rawStarRating))
+    : undefined
+const address: string | undefined = place.address ?? place.location
 ---
 
 <a href={href} class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -28,12 +46,25 @@ const { entity, href } = Astro.props
   <div class="card-body">
     <h3 class="card-title leading-snug">{entity.title}</h3>
 
-    {entity.description && (
-      <p class="text-base-content/70 line-clamp-3">{entity.description}</p>
-    )}
+    {/* Звёзды (для отелей) + плашка цен + адрес (для пляжей берём location) */}
+    {(typeof starCount === 'number' && starCount > 0) || priceLabel || address ? (
+      <div class="mt-1 flex flex-wrap gap-2 items-center text-sm text-base-content/70">
+        {typeof starCount === 'number' && starCount > 0 && (
+          <span class="inline-flex items-center gap-0.5 text-yellow-400 whitespace-nowrap">
+            {Array.from({ length: starCount }).map((_, i) => (
+              <Icon name="lucide:star" class="icon-star-filled w-4 h-4" data-star-index={i} />
+            ))}
+          </span>
+        )}
+        {priceLabel ? (
+          <span class="badge badge-outline badge-sm md:badge-md shrink-0 whitespace-nowrap">{priceLabel}</span>
+        ) : null}
+        {address ? <span>{address}</span> : null}
+      </div>
+    ) : null}
 
-    <div class="card-actions mt-2">
-      <span class="btn btn-primary btn-sm">Подробнее</span>
-    </div>
+    {entity.description && (
+      <p class="mt-2 text-base-content/70 line-clamp-3">{entity.description}</p>
+    )}
   </div>
 </a>

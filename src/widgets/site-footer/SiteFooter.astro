@@ -4,15 +4,13 @@
 
 const year = new Date().getFullYear()
 
-// Навигационные элементы
+// Навигационные элементы (без "Главная" и "Вечеринки")
 const navItems = [
-  { href: '/', label: 'Главная' },
   { href: '/clubs', label: 'Клубы' },
   { href: '/hotels', label: 'Отели' },
   { href: '/beaches', label: 'Пляжи' },
   { href: '/restaurants', label: 'Рестораны' },
   { href: '/articles', label: 'Статьи' },
-  { href: '/party-schedule', label: 'Вечеринки' },
 ]
 ---
 
@@ -29,8 +27,8 @@ const navItems = [
         </p>
       </aside>
 
-      <!-- Ссылки во второй колонке, без заголовка -->
-      <nav class="flex flex-col gap-2 sm:justify-self-end sm:text-right">
+      <!-- Ссылки во второй колонке, в один ряд -->
+      <nav class="flex flex-wrap gap-4 sm:justify-self-end sm:items-center sm:text-right">
         {navItems.map((item) => (
           <a class="link link-hover" href={item.href}>{item.label}</a>
         ))}

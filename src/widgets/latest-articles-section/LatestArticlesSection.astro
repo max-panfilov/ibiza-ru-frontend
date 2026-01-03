@@ -34,7 +34,8 @@ try {
             <div class="card-body">
               <h3 class="card-title leading-snug">{a.title}</h3>
               <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
-              <p class="text-base-content/70 line-clamp-3">{a.summary}</p>
+              {/* Краткое описание статьи с переносами строк, при этом оставляем line-clamp */}
+              <p class="text-base-content/70 line-clamp-3 multiline-text">{a.summary}</p>
             </div>
           </a>
         ))}

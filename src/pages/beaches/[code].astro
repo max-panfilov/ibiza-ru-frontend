@@ -51,11 +51,16 @@ try {
     <!-- Заголовок + быстрая инфа сверху (до слайдшоу) -->
     <header class="mb-6">
       <h1 class="text-3xl font-bold">{beach.title}</h1>
-      <p class="mt-2 text-base-content/70">{beach.description}</p>
 
-      <div class="mt-4 flex flex-wrap gap-2">
-        {beach.location ? <span class="badge badge-outline">{beach.location}</span> : null}
-      </div>
+      {/* Адрес/локация пляжа сразу под названием, без плашки */}
+      {beach.location ? (
+        <p class="mt-2 text-base-content/70">{beach.location}</p>
+      ) : null}
+
+      {/* Короткое описание пляжа с сохранением переводов строк */}
+      {beach.description ? (
+        <p class="mt-2 text-base-content/70 multiline-text">{beach.description}</p>
+      ) : null}
     </header>
 
     <!-- Крупное фото/галерея: слайдер (Embla) -->
@@ -65,53 +70,10 @@ try {
       alt={beach.title}
     />
 
-    <!-- Данные страницы в одну колонку -->
+    <!-- Карта (прототип) -->
     <div class="mt-10">
-
-      <!-- Пример блока «данные пляжа» (как будет выглядеть после интеграции) -->
-      <div class="mt-10">
-        <h2 class="text-xl font-semibold mb-4">Данные пляжа</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="card bg-base-100 border border-base-200">
-            <div class="card-body">
-              <h3 class="card-title text-lg">Основная информация</h3>
-
-              <dl class="mt-2 space-y-2">
-                {beach.location ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Локация</dt>
-                    <dd class="flex-1">{beach.location}</dd>
-                  </div>
-                ) : null}
-
-                {typeof beach.latitude === 'number' && typeof beach.longitude === 'number' ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Координаты</dt>
-                    <dd class="flex-1">{beach.latitude}, {beach.longitude}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </div>
-          </div>
-
-          <div class="card bg-base-100 border border-base-200">
-            <div class="card-body">
-              <h3 class="card-title text-lg">Особенности</h3>
-              <p class="mt-2 text-base-content/70">
-                Здесь появятся данные об удобствах, инфраструктуре, безопасности и рекомендациях для отдыха.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Карта (прототип) -->
-      <div class="mt-10">
-        <h2 class="text-xl font-semibold mb-4">На карте</h2>
-        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
-          Карта появится после интеграции (например, Mapbox/Google/Yandex)
-        </div>
+      <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
+        Карта появится после интеграции (например, Mapbox/Google/Yandex)
       </div>
     </div>
   </div>

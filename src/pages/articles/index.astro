@@ -49,7 +49,8 @@ try {
             <div class="card-body">
               <h2 class="card-title leading-snug">{a.title}</h2>
               <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
-              <p class="text-base-content/70">{a.summary}</p>
+              {/* Краткое описание статьи: учитываем переводы строк, если редактор их использует */}
+              <p class="text-base-content/70 multiline-text">{a.summary}</p>
             </div>
           </a>
         ))
