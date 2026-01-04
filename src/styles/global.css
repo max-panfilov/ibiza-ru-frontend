@@ -22,6 +22,7 @@ html {
 
 .article-content h2 {
   @apply text-2xl font-bold mt-8 mb-3;
+  scroll-margin-top: 5rem; /* чтобы якорь не прятался под фиксированной шапкой */
 }
 
 .article-content h3 {
@@ -76,6 +77,11 @@ html {
 /* Встраиваемый блок-тизер заведения (отель/ресторан/клуб) */
 .article-place {
   @apply my-8;
+}
+
+/* Более компактная версия embed для вставок объектов в текст статьи */
+.article-entity-embed {
+  @apply my-6;
 }
 
 /* Заполненные иконки звёзд (lucide:star) */

@@ -106,7 +106,7 @@ export interface ArticleDTO {
   id: string // UUID
   title: string
   summary: string
-  content: string // HTML контент
+  content: string // Markdown контент (рендерится на фронтенде)
   code: string
   author?: string
   published_at?: string

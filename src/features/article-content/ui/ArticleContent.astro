@@ -1,0 +1,26 @@
+---
+// src/features/article-content/ui/ArticleContent.astro
+// Компонент для рендеринга контента статьи с парсингом markdown.
+//
+// Согласно FSD + Clean Architecture:
+// - этот UI-слой features/article-content просто вызывает lib/renderArticleMarkdown
+// - pages/articles/[code].astro использует этот компонент и не знает про детали парсинга
+
+import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+
+interface Props {
+  /**
+   * Исходный markdown-контент из Directus articles.content
+   */
+  markdown: string
+}
+
+const { markdown } = Astro.props
+
+// Рендерим markdown в HTML на этапе билда/SSG (важно: это происходит один раз при сборке).
+// Если в будущем нужна SSR-версия — потребуется кэширование или оптимизация.
+const renderedHtml = await renderArticleMarkdownToHtml(markdown)
+---
+
+<!-- Контейнер со стилями для article-content из global.css -->
+<article class="article-content" set:html={renderedHtml} />

@@ -3,6 +3,7 @@
 
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
+import { renderArticleMarkdown } from '@/features/article-content/lib/renderArticleMarkdown'
 import { articleRepository } from '@/entities/article/api/articleRepository'
 import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
@@ -22,6 +23,9 @@ export async function getStaticPaths() {
 }
 
 const { article } = Astro.props as { article: Article }
+
+// Готовим HTML статьи + содержание по H2, чтобы отрисовать «Содержание» в правой колонке.
+const rendered = await renderArticleMarkdown(article.content)
 ---
 
 <SiteLayout
@@ -29,7 +33,7 @@ const { article } = Astro.props as { article: Article }
   description={article.summary}
   canonical={`https://ibiza.ru/articles/${article.code}`}
 >
-  <div class="container mx-auto px-4 py-10">
+  <div id="top" class="container mx-auto px-4 py-10">
     <div class="mb-6">
       <Breadcrumbs
         items={[
@@ -50,18 +54,45 @@ const { article } = Astro.props as { article: Article }
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
       <div class="lg:col-span-2">
-        <!-- Контент статьи (в прототипе — HTML). Позже заменим на рендер rich-text/markdown из Directus. -->
-        <article class="article-content" set:html={article.content} />
+        {article.coverImage?.url ? (
+          <figure class="mb-8">
+            <div class="w-full aspect-[16/9] overflow-hidden rounded-2xl border border-base-200 bg-base-200/30">
+              <img
+                src={article.coverImage.url}
+                alt={article.title}
+                class="h-full w-full object-cover"
+                loading="eager"
+              />
+            </div>
+          </figure>
+        ) : null}
+
+        <!-- Контент статьи: markdown из Directus (articles.content) → HTML с поддержкой врезок/вставок -->
+        <article class="article-content" set:html={rendered.html} />
       </div>
       <aside class="lg:col-span-1">
-        <div class="card bg-base-100 border border-base-200">
-          <div class="card-body">
-            <h2 class="card-title text-lg">Блок справа (прототип)</h2>
-            <p class="text-base-content/70">
-              Здесь можно разместить «похожие статьи», подписку, рекламу или навигацию по разделам.
-            </p>
-            <div class="card-actions">
-              <a class="btn btn-ghost" href="/articles">Назад к списку</a>
+        <div class="sticky top-24">
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body">
+              <h2 class="card-title text-lg">Содержание</h2>
+
+              {rendered.toc.length === 0 ? (
+                <div class="text-sm text-base-content/60">В этой статье нет разделов.</div>
+              ) : (
+                <ul class="menu menu-sm bg-base-100 rounded-box p-0">
+                  {rendered.toc.map((item) => (
+                    <li>
+                      <a href={`#${item.id}`} class="text-base-content/80 hover:text-base-content">
+                        {item.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div class="card-actions mt-2">
+                <a class="btn btn-ghost btn-sm" href="#top">Наверх</a>
+              </div>
             </div>
           </div>
         </div>
