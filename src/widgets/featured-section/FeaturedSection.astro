@@ -9,13 +9,17 @@ import { beachRepository } from '@/entities/beach/api/beachRepository'
 import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
 import { clubRepository } from '@/entities/club/api/clubRepository'
 import { logApiError } from '@/shared/api/errors'
+import type { Hotel } from '@/entities/hotel/model/types'
+import type { Beach } from '@/entities/beach/model/types'
+import type { Restaurant } from '@/entities/restaurant/model/types'
+import type { Club } from '@/entities/club/model/types'
 
 // Загружаем случайные сущности через репозитории доменного слоя
 // Каждый репозиторий сам решает, как именно выбирать случайные записи (инкапсуляция логики)
-let featuredHotels = []
-let featuredBeaches = []
-let featuredRestaurants = []
-let featuredClubs = []
+let featuredHotels: Hotel[] = []
+let featuredBeaches: Beach[] = []
+let featuredRestaurants: Restaurant[] = []
+let featuredClubs: Club[] = []
 
 try {
   // Получаем до трёх случайных отелей
@@ -53,7 +57,7 @@ try {
       <h2 class="text-4xl font-bold mb-8 text-center">Отели</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {featuredHotels.map((hotel: any) => (
+        {featuredHotels.map((hotel) => (
           // Используем стандартную карточку сущности, как в списках
           <EntityCard entity={hotel} href={`/hotels/${hotel.code}`} />
         ))}
@@ -73,7 +77,7 @@ try {
       <h2 class="text-4xl font-bold mb-8 text-center">Пляжи</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {featuredBeaches.map((beach: any) => (
+        {featuredBeaches.map((beach) => (
           <EntityCard entity={beach} href={`/beaches/${beach.code}`} />
         ))}
       </div>
@@ -92,7 +96,7 @@ try {
       <h2 class="text-4xl font-bold mb-8 text-center">Рестораны</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {featuredRestaurants.map((restaurant: any) => (
+        {featuredRestaurants.map((restaurant) => (
           <EntityCard entity={restaurant} href={`/restaurants/${restaurant.code}`} />
         ))}
       </div>
@@ -111,7 +115,7 @@ try {
       <h2 class="text-4xl font-bold mb-8 text-center">Клубы</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {featuredClubs.map((club: any) => (
+        {featuredClubs.map((club) => (
           <EntityCard entity={club} href={`/clubs/${club.code}`} />
         ))}
       </div>

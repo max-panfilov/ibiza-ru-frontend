@@ -6,6 +6,31 @@ import SiteLayout from '../layouts/SiteLayout.astro'
 import HeroSection from '@/widgets/hero-section/HeroSection.astro'
 import FeaturedSection from '@/widgets/featured-section/FeaturedSection.astro'
 import LatestArticlesSection from '@/widgets/latest-articles-section/LatestArticlesSection.astro'
+
+// SEO: JSON-LD для главной.
+// Делаем простой ItemList по основным разделам (стабильно, без рандома).
+const homeStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: 'https://ibiza.ru',
+    name: 'Ibiza.ru - Туристический портал Ибицы',
+    description: 'Ваш путеводитель по Ибице — лучшие отели, пляжи, рестораны и клубы.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Разделы сайта',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, item: { '@type': 'WebPage', name: 'Отели', url: 'https://ibiza.ru/hotels' } },
+      { '@type': 'ListItem', position: 2, item: { '@type': 'WebPage', name: 'Пляжи', url: 'https://ibiza.ru/beaches' } },
+      { '@type': 'ListItem', position: 3, item: { '@type': 'WebPage', name: 'Рестораны', url: 'https://ibiza.ru/restaurants' } },
+      { '@type': 'ListItem', position: 4, item: { '@type': 'WebPage', name: 'Клубы', url: 'https://ibiza.ru/clubs' } },
+      { '@type': 'ListItem', position: 5, item: { '@type': 'WebPage', name: 'Статьи', url: 'https://ibiza.ru/articles' } },
+      { '@type': 'ListItem', position: 6, item: { '@type': 'WebPage', name: 'Расписание вечеринок', url: 'https://ibiza.ru/party-schedule' } },
+    ],
+  },
+]
 ---
 
 <SiteLayout
@@ -13,6 +38,8 @@ import LatestArticlesSection from '@/widgets/latest-articles-section/LatestArtic
   description="Ваш путеводитель по Ибице — лучшие отели, пляжи, рестораны и клубы."
   canonical="https://ibiza.ru"
   isHome={true}
+  ogImage="/images/ibiza-hero.png"
+  structuredData={homeStructuredData}
 >
   <HeroSection />
   <FeaturedSection />

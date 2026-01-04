@@ -4,6 +4,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
+import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
 import { logApiError } from '@/shared/api/errors'
 import type { Restaurant } from '@/entities/restaurant/model/types'
@@ -16,7 +17,9 @@ export async function getStaticPaths() {
       params: { code: restaurant.code },
     }))
   } catch (error) {
+    // В PROD сборке лучше упасть, чем незаметно сгенерировать 0 страниц.
     logApiError(error)
+    if (import.meta.env.PROD) throw error
     return []
   }
 }
@@ -30,12 +33,37 @@ try {
   logApiError(error)
   throw error
 }
+
+// SEO: og:image берём из обложки (или первого изображения).
+const ogImage = restaurant.coverImage?.url ?? restaurant.images?.[0]?.url
+
+// SEO: JSON-LD для ресторана.
+const restaurantStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  name: restaurant.title,
+  url: `https://ibiza.ru/restaurants/${restaurant.code}`,
+  ...(restaurant.description ? { description: restaurant.description } : {}),
+  ...(ogImage ? { image: ogImage } : {}),
+  ...(restaurant.address ? { address: restaurant.address } : {}),
+  ...(typeof restaurant.latitude === 'number' && typeof restaurant.longitude === 'number'
+    ? {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: restaurant.latitude,
+          longitude: restaurant.longitude,
+        },
+      }
+    : {}),
+}
 ---
 
 <SiteLayout
   title={`${restaurant.title} | Рестораны | Ibiza.ru`}
   description={restaurant.description}
   canonical={`https://ibiza.ru/restaurants/${restaurant.code}`}
+  ogImage={ogImage}
+  structuredData={restaurantStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -113,12 +141,13 @@ try {
         </div>
       </div>
 
-      <!-- Карта (прототип) -->
-      <div class="mt-10">
-        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
-          Карта появится после интеграции (например, Mapbox/Google/Yandex)
-        </div>
-      </div>
+      <!-- Карта -->
+      <PlaceMap
+        id={`restaurant-map-${restaurant.code}`}
+        title={restaurant.title}
+        latitude={restaurant.latitude}
+        longitude={restaurant.longitude}
+      />
     </div>
   </div>
 </SiteLayout>

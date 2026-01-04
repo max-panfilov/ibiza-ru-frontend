@@ -6,8 +6,9 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import EntityCard from '@/shared/ui/EntityCard.astro'
 import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
 import { logApiError } from '@/shared/api/errors'
+import type { Hotel } from '@/entities/hotel/model/types'
 
-let hotels = []
+let hotels: Hotel[] = []
 let error: string | null = null
 
 try {
@@ -16,12 +17,43 @@ try {
   logApiError(err)
   error = 'Не удалось загрузить список отелей'
 }
+
+// SEO: JSON-LD для страницы-коллекции.
+// Даём поисковику понять, что здесь список объектов.
+// SEO: og:image для страницы списка. Берём обложку первого отеля (если есть).
+const ogImage = hotels[0]?.coverImage?.url ?? hotels[0]?.images?.[0]?.url
+
+const hotelsStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Отели Ибицы',
+    url: 'https://ibiza.ru/hotels',
+    description: 'Лучшие отели Ибицы — от роскошных курортов до уютных бутик-отелей. (Прототип)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Список отелей',
+    itemListElement: hotels.map((h, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'Hotel',
+        name: h.title,
+        url: `https://ibiza.ru/hotels/${h.code}`,
+      },
+    })),
+  },
+]
 ---
 
 <SiteLayout
   title="Отели Ибицы | Ibiza.ru"
   description="Лучшие отели Ибицы — от роскошных курортов до уютных бутик-отелей. (Прототип)"
   canonical="https://ibiza.ru/hotels"
+  ogImage={ogImage}
+  structuredData={hotelsStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">

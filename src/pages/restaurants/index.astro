@@ -6,8 +6,9 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import EntityCard from '@/shared/ui/EntityCard.astro'
 import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
 import { logApiError } from '@/shared/api/errors'
+import type { Restaurant } from '@/entities/restaurant/model/types'
 
-let restaurants = []
+let restaurants: Restaurant[] = []
 let error: string | null = null
 
 try {
@@ -16,12 +17,42 @@ try {
   logApiError(err)
   error = 'Не удалось загрузить список ресторанов'
 }
+
+// SEO: JSON-LD для страницы-коллекции ресторанов.
+// SEO: og:image для страницы списка. Берём обложку первого ресторана (если есть).
+const ogImage = restaurants[0]?.coverImage?.url ?? restaurants[0]?.images?.[0]?.url
+
+const restaurantsStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Рестораны Ибицы',
+    url: 'https://ibiza.ru/restaurants',
+    description: 'Лучшие рестораны Ибицы — от высокой кухни до аутентичных местных кафе. (Прототип)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Список ресторанов',
+    itemListElement: restaurants.map((r, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'Restaurant',
+        name: r.title,
+        url: `https://ibiza.ru/restaurants/${r.code}`,
+      },
+    })),
+  },
+]
 ---
 
 <SiteLayout
   title="Рестораны Ибицы | Ibiza.ru"
   description="Лучшие рестораны Ибицы — от высокой кухни до аутентичных местных кафе. (Прототип)"
   canonical="https://ibiza.ru/restaurants"
+  ogImage={ogImage}
+  structuredData={restaurantsStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -33,7 +64,11 @@ try {
       <p class="text-base-content/70 mt-2">Изысканная кухня и потрясающие виды в лучших ресторанах острова</p>
     </div>
 
-    {restaurants.length === 0 ? (
+    {error ? (
+      <div class="alert alert-error">
+        <span>{error}</span>
+      </div>
+    ) : restaurants.length === 0 ? (
       <div class="text-center py-12 text-base-content/60">Рестораны пока не добавлены</div>
     ) : (
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

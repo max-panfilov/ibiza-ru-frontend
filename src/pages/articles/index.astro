@@ -6,8 +6,9 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import { articleRepository } from '@/entities/article/api/articleRepository'
 import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
+import type { Article } from '@/entities/article/model/types'
 
-let articles = []
+let articles: Article[] = []
 let error: string | null = null
 
 try {
@@ -16,13 +17,42 @@ try {
   logApiError(err)
   error = 'Не удалось загрузить список статей'
 }
----
+
+// SEO: JSON-LD для страницы-коллекции статей.
+// SEO: og:image для страницы списка. Берём cover первой статьи (если есть).
+const ogImage = articles[0]?.coverImage?.url
+
+const articlesStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Статьи об Ибице',
+    url: 'https://ibiza.ru/articles',
+    description: 'Интересные статьи, обзоры и рекомендации об отдыхе на Ибице (прототип)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Список статей',
+    itemListElement: articles.map((a, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'BlogPosting',
+        headline: a.title,
+        url: `https://ibiza.ru/articles/${a.code}`,
+      },
+    })),
+  },
+]
 ---
 
 <SiteLayout
   title="Статьи об Ибице | Ibiza.ru"
   description="Интересные статьи, обзоры и рекомендации об отдыхе на Ибице (прототип)"
   canonical="https://ibiza.ru/articles"
+  ogImage={ogImage}
+  structuredData={articlesStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -33,6 +63,12 @@ try {
       <h1 class="text-3xl font-bold">Статьи об Ибице</h1>
       <p class="text-base-content/70 mt-2">Интересные статьи, обзоры и рекомендации об отдыхе на Ибице</p>
     </div>
+
+    {error ? (
+      <div class="alert alert-error">
+        <span>{error}</span>
+      </div>
+    ) : null}
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {articles.length === 0 ? (
@@ -48,7 +84,9 @@ try {
             </figure>
             <div class="card-body">
               <h2 class="card-title leading-snug">{a.title}</h2>
-              <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
+              {a.publishedAt ? (
+                <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
+              ) : null}
               {/* Краткое описание статьи: учитываем переводы строк, если редактор их использует */}
               <p class="text-base-content/70 multiline-text">{a.summary}</p>
             </div>

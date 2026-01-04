@@ -5,8 +5,9 @@
 import { articleRepository } from '@/entities/article/api/articleRepository'
 import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
+import type { Article } from '@/entities/article/model/types'
 
-let latest = []
+let latest: Article[] = []
 try {
   const articles = await articleRepository.getAll({ limit: 3 })
   latest = articles
@@ -33,7 +34,9 @@ try {
             </figure>
             <div class="card-body">
               <h3 class="card-title leading-snug">{a.title}</h3>
-              <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
+              {a.publishedAt ? (
+                <div class="text-sm text-base-content/60">{formatDateRu(a.publishedAt)}</div>
+              ) : null}
               {/* Краткое описание статьи с переносами строк, при этом оставляем line-clamp */}
               <p class="text-base-content/70 line-clamp-3 multiline-text">{a.summary}</p>
             </div>

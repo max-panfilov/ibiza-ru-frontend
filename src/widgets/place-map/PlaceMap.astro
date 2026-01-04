@@ -1,0 +1,83 @@
+---
+// src/widgets/place-map/PlaceMap.astro
+// Виджет карты для страницы объекта (клуб/отель/ресторан/пляж).
+// Показывает Google Maps (язык: ru) и маркер по координатам из доменной модели.
+
+// Важно: клиентский код карты грузим динамически в <script type="module"> ниже,
+// чтобы инициировать загрузку только после полной загрузки страницы.
+
+export interface Props {
+  /**
+   * Уникальный id DOM-элемента карты.
+   */
+  id: string
+  title: string
+  latitude?: number
+  longitude?: number
+  zoom?: number
+}
+
+const { id, title, latitude, longitude, zoom = 15 } = Astro.props
+
+// API key должен быть "PUBLIC_", т.к. Google Maps JS API загружается в браузере.
+// ВНИМАНИЕ: это нормальная практика для Maps JS API — ключ нужно просто ограничить по доменам (HTTP referrers).
+const apiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY as string | undefined
+
+const lat = latitude
+const lng = longitude
+
+const hasCoords = typeof lat === 'number' && typeof lng === 'number'
+const hasApiKey = typeof apiKey === 'string' && apiKey.length > 0
+---
+
+<div class="mt-10">
+  <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 overflow-hidden">
+    {hasCoords && hasApiKey ? (
+      // Сам контейнер карты. Высоту задаём через aspect-video у родителя.
+      <div
+        id={id}
+        class="w-full h-full"
+        aria-label={`Карта: ${title}`}
+        data-place-map
+        data-title={title}
+        data-lat={lat}
+        data-lng={lng}
+        data-zoom={zoom}
+        data-api-key={apiKey}
+      ></div>
+    ) : (
+      // Фоллбек, если координаты или ключ ещё не настроены.
+      <div class="w-full h-full flex items-center justify-center text-base-content/60 p-4 text-center">
+        {!hasCoords ? (
+          <span>Координаты объекта не указаны (latitude/longitude)</span>
+        ) : !hasApiKey ? (
+          <span>Карта не настроена: добавьте PUBLIC_GOOGLE_MAPS_API_KEY</span>
+        ) : (
+          <span>Карта временно недоступна</span>
+        )}
+      </div>
+    )}
+  </div>
+
+  {hasCoords && hasApiKey ? (
+    <script>
+      // Lazy-load клиентского кода карты после загрузки основного контента страницы.
+      // Важно: без атрибутов <script> будет обработан Astro/Vite как ESM.
+      // Требование: не ждём клика/доскролла — просто грузим после window.load.
+
+      const loadPlaceMapClient = () => {
+        // Импортируем клиентский модуль карты; он сам найдёт все [data-place-map] элементы.
+        // setTimeout нужен, чтобы дать браузеру дорисовать «above the fold» контент после события load.
+        setTimeout(() => {
+          void import('./placeMapClient')
+        }, 0)
+      }
+
+      if (document.readyState === 'complete') {
+        loadPlaceMapClient()
+      } else {
+        window.addEventListener('load', loadPlaceMapClient, { once: true })
+      }
+    </script>
+  ) : null}
+</div>

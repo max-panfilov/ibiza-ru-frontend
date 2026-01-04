@@ -12,10 +12,102 @@ export interface Props {
   description?: string
   canonical?: string
   isHome?: boolean
+
+  /**
+   * Open Graph тип страницы.
+   * Для статей стоит передавать "article".
+   */
+  ogType?: 'website' | 'article'
+
+  /**
+   * Open Graph / Twitter изображение.
+   * Можно передавать абсолютный URL (Directus assets) или относительный путь ("/images/...").
+   */
+  ogImage?: string
+
+  /**
+   * Управление индексацией (по умолчанию index,follow).
+   */
+  robots?: string
+
+  /**
+   * Дополнительные структурированные данные JSON-LD для конкретной страницы.
+   * Можно передать объект или массив объектов.
+   */
+  structuredData?: unknown | unknown[]
 }
 
-const { title, description, canonical, isHome = false } = Astro.props
+const {
+  title,
+  description,
+  canonical,
+  isHome = false,
+  ogType = 'website',
+  ogImage,
+  robots = 'index,follow',
+  structuredData,
+} = Astro.props
+
 const currentPath = Astro.url.pathname
+
+// Базовый URL сайта (используется для абсолютных ссылок в SEO-метаданных).
+// Astro берёт его из astro.config.mjs (поле site).
+const siteUrl = (Astro.site ? Astro.site.toString() : 'https://ibiza.ru').replace(/\/$/, '')
+
+function toAbsoluteUrl(urlOrPath: string | undefined): string | null {
+  if (!urlOrPath) return null
+  try {
+    // Если уже абсолютный URL — вернём как есть.
+    return new URL(urlOrPath).toString()
+  } catch {
+    // Иначе считаем относительным путём.
+    return new URL(urlOrPath, siteUrl + '/').toString()
+  }
+}
+
+// Канонический URL страницы.
+const canonicalUrl = toAbsoluteUrl(canonical) ?? new URL(currentPath, siteUrl + '/').toString()
+
+// Open Graph изображение: дефолт — hero (есть в public/images).
+const ogImageUrl = toAbsoluteUrl(ogImage) ?? new URL('/images/ibiza-hero.png', siteUrl + '/').toString()
+
+// Безопасная сериализация JSON-LD (важно экранировать "<", чтобы случайно не закрыть </script>).
+function safeJsonLd(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c')
+}
+
+// Базовые структурированные данные (добавляются на все страницы).
+const baseStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Ibiza.ru',
+    url: siteUrl,
+    logo: new URL('/favicon.svg', siteUrl + '/').toString(),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Ibiza.ru',
+    url: siteUrl,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: canonicalUrl,
+    name: title,
+    ...(description ? { description } : {}),
+  },
+]
+
+const pageStructuredData =
+  structuredData === undefined
+    ? []
+    : Array.isArray(structuredData)
+      ? structuredData
+      : [structuredData]
+
+const structuredDataJson = safeJsonLd([...baseStructuredData, ...pageStructuredData])
 ---
 
 <html lang="ru" data-theme="light">
@@ -26,7 +118,29 @@ const currentPath = Astro.url.pathname
 
     <title>{title}</title>
     {description ? <meta name="description" content={description} /> : null}
-    {canonical ? <link rel="canonical" href={canonical} /> : null}
+    <link rel="canonical" href={canonicalUrl} />
+
+    {/* Управление индексацией */}
+    <meta name="robots" content={robots} />
+
+    {/* Open Graph */}
+    <meta property="og:site_name" content="Ibiza.ru" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    {description ? <meta property="og:description" content={description} /> : null}
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={title} />
+
+    {/* Twitter Cards */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description ? <meta name="twitter:description" content={description} /> : null}
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    {/* JSON-LD */}
+    <script type="application/ld+json" is:inline set:html={structuredDataJson} />
 
     <link rel="icon" href="/favicon.ico" />
   </head>

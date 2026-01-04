@@ -17,7 +17,9 @@ export async function getStaticPaths() {
       props: { article },
     }))
   } catch (error) {
+    // В PROD сборке лучше упасть, чем незаметно сгенерировать 0 страниц.
     logApiError(error)
+    if (import.meta.env.PROD) throw error
     return []
   }
 }
@@ -26,12 +28,46 @@ const { article } = Astro.props as { article: Article }
 
 // Готовим HTML статьи + содержание по H2, чтобы отрисовать «Содержание» в правой колонке.
 const rendered = await renderArticleMarkdown(article.content)
+
+// SEO: og:image берём из cover (или плейсхолдера, если нет).
+const ogImage = article.coverImage?.url
+
+// SEO: JSON-LD для статьи.
+const articleStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: article.title,
+  description: article.summary,
+  url: `https://ibiza.ru/articles/${article.code}`,
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': `https://ibiza.ru/articles/${article.code}`,
+  },
+  ...(ogImage ? { image: ogImage } : {}),
+  ...(article.publishedAt ? { datePublished: article.publishedAt } : {}),
+  ...(article.author
+    ? {
+        author: {
+          '@type': 'Person',
+          name: article.author,
+        },
+      }
+    : {}),
+  publisher: {
+    '@type': 'Organization',
+    name: 'Ibiza.ru',
+    url: 'https://ibiza.ru',
+  },
+}
 ---
 
 <SiteLayout
   title={`${article.title} | Ibiza.ru`}
   description={article.summary}
   canonical={`https://ibiza.ru/articles/${article.code}`}
+  ogType="article"
+  ogImage={ogImage}
+  structuredData={articleStructuredData}
 >
   <div id="top" class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -47,7 +83,7 @@ const rendered = await renderArticleMarkdown(article.content)
     <header class="mb-8">
       <h1 class="text-3xl font-bold">{article.title}</h1>
       <div class="mt-2 text-sm text-base-content/60">
-        {formatDateRu(article.publishedAt)}
+        {article.publishedAt ? formatDateRu(article.publishedAt) : null}
         {article.author ? <span> · {article.author}</span> : null}
       </div>
     </header>

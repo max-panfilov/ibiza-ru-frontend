@@ -4,6 +4,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
+import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { beachRepository } from '@/entities/beach/api/beachRepository'
 import { logApiError } from '@/shared/api/errors'
 import type { Beach } from '@/entities/beach/model/types'
@@ -16,7 +17,9 @@ export async function getStaticPaths() {
       params: { code: beach.code },
     }))
   } catch (error) {
+    // В PROD сборке лучше упасть, чем незаметно сгенерировать 0 страниц.
     logApiError(error)
+    if (import.meta.env.PROD) throw error
     return []
   }
 }
@@ -30,12 +33,37 @@ try {
   logApiError(error)
   throw error
 }
+
+// SEO: og:image берём из обложки (или первого изображения).
+const ogImage = beach.coverImage?.url ?? beach.images?.[0]?.url
+
+// SEO: JSON-LD для пляжа. Берём максимально универсальный тип TouristAttraction.
+const beachStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TouristAttraction',
+  name: beach.title,
+  url: `https://ibiza.ru/beaches/${beach.code}`,
+  ...(beach.description ? { description: beach.description } : {}),
+  ...(ogImage ? { image: ogImage } : {}),
+  ...(beach.location ? { address: beach.location } : {}),
+  ...(typeof beach.latitude === 'number' && typeof beach.longitude === 'number'
+    ? {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: beach.latitude,
+          longitude: beach.longitude,
+        },
+      }
+    : {}),
+}
 ---
 
 <SiteLayout
   title={`${beach.title} | Пляжи | Ibiza.ru`}
-  description={beach.summary}
+  description={beach.description}
   canonical={`https://ibiza.ru/beaches/${beach.code}`}
+  ogImage={ogImage}
+  structuredData={beachStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -70,11 +98,12 @@ try {
       alt={beach.title}
     />
 
-    <!-- Карта (прототип) -->
-    <div class="mt-10">
-      <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
-        Карта появится после интеграции (например, Mapbox/Google/Yandex)
-      </div>
-    </div>
+    <!-- Карта -->
+    <PlaceMap
+      id={`beach-map-${beach.code}`}
+      title={beach.title}
+      latitude={beach.latitude}
+      longitude={beach.longitude}
+    />
   </div>
 </SiteLayout>

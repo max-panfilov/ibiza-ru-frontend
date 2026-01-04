@@ -4,6 +4,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
+import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { Icon } from 'astro-icon/components'
 import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
 import { logApiError } from '@/shared/api/errors'
@@ -17,7 +18,9 @@ export async function getStaticPaths() {
       params: { code: hotel.code },
     }))
   } catch (error) {
+    // В PROD сборке лучше упасть, чем незаметно сгенерировать 0 страниц.
     logApiError(error)
+    if (import.meta.env.PROD) throw error
     return []
   }
 }
@@ -31,12 +34,37 @@ try {
   logApiError(error)
   throw error
 }
+
+// SEO: og:image берём из обложки (или первого изображения).
+const ogImage = hotel.coverImage?.url ?? hotel.images?.[0]?.url
+
+// SEO: JSON-LD для отеля (минимально полезные поля).
+const hotelStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Hotel',
+  name: hotel.title,
+  url: `https://ibiza.ru/hotels/${hotel.code}`,
+  ...(hotel.description ? { description: hotel.description } : {}),
+  ...(ogImage ? { image: ogImage } : {}),
+  ...(hotel.address ? { address: hotel.address } : {}),
+  ...(typeof hotel.latitude === 'number' && typeof hotel.longitude === 'number'
+    ? {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: hotel.latitude,
+          longitude: hotel.longitude,
+        },
+      }
+    : {}),
+}
 ---
 
 <SiteLayout
   title={`${hotel.title} | Отели | Ibiza.ru`}
   description={hotel.description}
   canonical={`https://ibiza.ru/hotels/${hotel.code}`}
+  ogImage={ogImage}
+  structuredData={hotelStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -144,12 +172,13 @@ try {
         </div>
       </div>
 
-      <!-- Карта (прототип) -->
-      <div class="mt-10">
-        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
-          Карта появится после интеграции (например, Mapbox/Google/Yandex)
-        </div>
-      </div>
+      <!-- Карта -->
+      <PlaceMap
+        id={`hotel-map-${hotel.code}`}
+        title={hotel.title}
+        latitude={hotel.latitude}
+        longitude={hotel.longitude}
+      />
     </div>
   </div>
 </SiteLayout>

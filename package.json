@@ -13,6 +13,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,astro,json,css}\""
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.6.0",
     "@directus/sdk": "^18.0.3",
     "@iconify-json/lucide": "^1.2.82",
     "@tailwindcss/vite": "^4.1.18",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@types/google.maps": "^3.58.1",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
     "eslint": "^9.39.2",

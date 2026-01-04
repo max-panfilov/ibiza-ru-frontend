@@ -6,8 +6,9 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import EntityCard from '@/shared/ui/EntityCard.astro'
 import { clubRepository } from '@/entities/club/api/clubRepository'
 import { logApiError } from '@/shared/api/errors'
+import type { Club } from '@/entities/club/model/types'
 
-let clubs = []
+let clubs: Club[] = []
 let error: string | null = null
 
 try {
@@ -16,12 +17,42 @@ try {
   logApiError(err)
   error = 'Не удалось загрузить список клубов'
 }
+
+// SEO: JSON-LD для страницы-коллекции клубов.
+// SEO: og:image для страницы списка. Берём обложку первого клуба (если есть).
+const ogImage = clubs[0]?.coverImage?.url ?? clubs[0]?.images?.[0]?.url
+
+const clubsStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Клубы Ибицы',
+    url: 'https://ibiza.ru/clubs',
+    description: 'Легендарные ночные клубы Ибицы — от всемирно известных до андеграундных. (Прототип)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Список клубов',
+    itemListElement: clubs.map((c, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'NightClub',
+        name: c.title,
+        url: `https://ibiza.ru/clubs/${c.code}`,
+      },
+    })),
+  },
+]
 ---
 
 <SiteLayout
   title="Клубы Ибицы | Ibiza.ru"
   description="Легендарные ночные клубы Ибицы — от всемирно известных до андеграундных. (Прототип)"
   canonical="https://ibiza.ru/clubs"
+  ogImage={ogImage}
+  structuredData={clubsStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">

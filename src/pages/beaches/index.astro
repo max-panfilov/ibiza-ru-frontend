@@ -6,8 +6,9 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import EntityCard from '@/shared/ui/EntityCard.astro'
 import { beachRepository } from '@/entities/beach/api/beachRepository'
 import { logApiError } from '@/shared/api/errors'
+import type { Beach } from '@/entities/beach/model/types'
 
-let beaches = []
+let beaches: Beach[] = []
 let error: string | null = null
 
 try {
@@ -16,12 +17,42 @@ try {
   logApiError(err)
   error = 'Не удалось загрузить список пляжей'
 }
+
+// SEO: JSON-LD для страницы-коллекции пляжей.
+// SEO: og:image для страницы списка. Берём обложку первого пляжа (если есть).
+const ogImage = beaches[0]?.coverImage?.url ?? beaches[0]?.images?.[0]?.url
+
+const beachesStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Пляжи Ибицы',
+    url: 'https://ibiza.ru/beaches',
+    description: 'Лучшие пляжи Ибицы — от популярных туристических до уединённых бухт. (Прототип)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Список пляжей',
+    itemListElement: beaches.map((b, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'TouristAttraction',
+        name: b.title,
+        url: `https://ibiza.ru/beaches/${b.code}`,
+      },
+    })),
+  },
+]
 ---
 
 <SiteLayout
   title="Пляжи Ибицы | Ibiza.ru"
   description="Лучшие пляжи Ибицы — от популярных туристических до уединённых бухт. (Прототип)"
   canonical="https://ibiza.ru/beaches"
+  ogImage={ogImage}
+  structuredData={beachesStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -35,7 +66,11 @@ try {
       </p>
     </div>
 
-    {beaches.length === 0 ? (
+    {error ? (
+      <div class="alert alert-error">
+        <span>{error}</span>
+      </div>
+    ) : beaches.length === 0 ? (
       <div class="text-center py-12 text-base-content/60">Пляжи пока не добавлены</div>
     ) : (
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

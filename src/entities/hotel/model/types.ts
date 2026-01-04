@@ -16,5 +16,12 @@ export interface Hotel {
   website?: string
   priceRange?: string
   starRating?: number
+
+  // Поля, которые используются в UI как «заглушки/пример».
+  // Если в Directus они отсутствуют, они останутся undefined — UI корректно это обработает.
+  checkIn?: string
+  checkOut?: string
+  tags?: string[]
+
   images: DomainImage[]
 }

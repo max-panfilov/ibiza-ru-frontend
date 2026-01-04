@@ -4,6 +4,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
+import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { clubRepository } from '@/entities/club/api/clubRepository'
 import { logApiError } from '@/shared/api/errors'
 import type { Club } from '@/entities/club/model/types'
@@ -16,7 +17,9 @@ export async function getStaticPaths() {
       params: { code: club.code },
     }))
   } catch (error) {
+    // В PROD сборке лучше упасть, чем незаметно сгенерировать 0 страниц.
     logApiError(error)
+    if (import.meta.env.PROD) throw error
     return []
   }
 }
@@ -30,12 +33,37 @@ try {
   logApiError(error)
   throw error
 }
+
+// SEO: og:image берём из обложки (или первого изображения).
+const ogImage = club.coverImage?.url ?? club.images?.[0]?.url
+
+// SEO: JSON-LD для ночного клуба.
+const clubStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'NightClub',
+  name: club.title,
+  url: `https://ibiza.ru/clubs/${club.code}`,
+  ...(club.description ? { description: club.description } : {}),
+  ...(ogImage ? { image: ogImage } : {}),
+  ...(club.address ? { address: club.address } : {}),
+  ...(typeof club.latitude === 'number' && typeof club.longitude === 'number'
+    ? {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: club.latitude,
+          longitude: club.longitude,
+        },
+      }
+    : {}),
+}
 ---
 
 <SiteLayout
   title={`${club.title} | Клубы | Ibiza.ru`}
   description={club.description}
   canonical={`https://ibiza.ru/clubs/${club.code}`}
+  ogImage={ogImage}
+  structuredData={clubStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
     <div class="mb-6">
@@ -133,12 +161,13 @@ try {
         </div>
       </div>
 
-      <!-- Карта (прототип) -->
-      <div class="mt-10">
-        <div class="aspect-video rounded-2xl border border-base-200 bg-base-200/40 flex items-center justify-center text-base-content/60">
-          Карта появится после интеграции (например, Mapbox/Google/Yandex)
-        </div>
-      </div>
+      <!-- Карта -->
+      <PlaceMap
+        id={`club-map-${club.code}`}
+        title={club.title}
+        latitude={club.latitude}
+        longitude={club.longitude}
+      />
     </div>
   </div>
 </SiteLayout>

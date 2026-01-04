@@ -12,6 +12,35 @@ export interface Props {
 }
 
 const { items } = Astro.props
+
+// Базовый URL сайта нужен для JSON-LD (абсолютные ссылки).
+const siteUrl = (Astro.site ? Astro.site.toString() : 'https://ibiza.ru').replace(/\/$/, '')
+
+function toAbsoluteUrl(urlOrPath: string): string {
+  try {
+    return new URL(urlOrPath).toString()
+  } catch {
+    return new URL(urlOrPath, siteUrl + '/').toString()
+  }
+}
+
+// Текущий URL страницы используем для последнего элемента, если у него нет href.
+const currentUrl = new URL(Astro.url.pathname, siteUrl + '/').toString()
+
+// JSON-LD требует item.url для каждого уровня.
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    name: item.label,
+    item: item.href ? toAbsoluteUrl(item.href) : currentUrl,
+  })),
+}
+
+// Экранируем "<", чтобы случайно не закрыть </script>.
+const breadcrumbJsonLdString = JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')
 ---
 
 <nav class="breadcrumbs text-sm">
@@ -27,3 +56,5 @@ const { items } = Astro.props
     ))}
   </ul>
 </nav>
+
+<script type="application/ld+json" is:inline set:html={breadcrumbJsonLdString} />
