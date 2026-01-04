@@ -142,10 +142,52 @@ const structuredDataJson = safeJsonLd([...baseStructuredData, ...pageStructuredD
     {/* JSON-LD */}
     <script type="application/ld+json" is:inline set:html={structuredDataJson} />
 
+    {/* Yandex.Metrika counter */}
+    <script type="text/javascript" is:inline>
+      ;(function (m, e, t, r, i, k, a) {
+        m[i] =
+          m[i] ||
+          function () {
+            ;(m[i].a = m[i].a || []).push(arguments)
+          }
+        m[i].l = 1 * new Date()
+        for (var j = 0; j < document.scripts.length; j++) {
+          if (document.scripts[j].src === r) {
+            return
+          }
+        }
+        k = e.createElement(t)
+        a = e.getElementsByTagName(t)[0]
+        k.async = 1
+        k.src = r
+        a.parentNode.insertBefore(k, a)
+      })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym')
+
+      ym(1225399, 'init', {
+        webvisor: true,
+        clickmap: true,
+        accurateTrackBounce: true,
+        trackLinks: true,
+      })
+    </script>
+    {/* /Yandex.Metrika counter */}
+
     <link rel="icon" href="/favicon.ico" />
   </head>
 
   <body class="min-h-screen flex flex-col bg-base-100 text-base-content">
+    {/* Yandex.Metrika counter (noscript) */}
+    <noscript>
+      <div>
+        <img
+          src="https://mc.yandex.ru/watch/1225399"
+          style="position:absolute; left:-9999px;"
+          alt=""
+        />
+      </div>
+    </noscript>
+    {/* /Yandex.Metrika counter (noscript) */}
+
     <SiteHeader currentPath={currentPath} isHome={isHome} />
 
     <main class={isHome ? 'flex-1' : 'flex-1 pt-16'}>
