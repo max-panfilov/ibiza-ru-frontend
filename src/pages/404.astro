@@ -1,0 +1,52 @@
+---
+// src/pages/404.astro
+// Кастомная страница «Не найдено».
+// Нужна для статической сборки: nginx сможет отдавать dist/404.html с HTTP 404.
+
+import SiteLayout from '../layouts/SiteLayout.astro'
+
+// Список быстрых ссылок, чтобы пользователь мог продолжить навигацию.
+const quickLinks = [
+  { href: '/', label: 'Главная' },
+  { href: '/hotels', label: 'Отели' },
+  { href: '/beaches', label: 'Пляжи' },
+  { href: '/restaurants', label: 'Рестораны' },
+  { href: '/clubs', label: 'Клубы' },
+  { href: '/articles', label: 'Статьи' },
+  { href: '/party-schedule', label: 'Расписание вечеринок' },
+]
+---
+
+<SiteLayout
+  title="404 — страница не найдена"
+  description="Такой страницы не существует. Перейдите на главную или выберите нужный раздел."
+  robots="noindex,follow"
+>
+  <!-- Центрируем контент и даём пользователю понятные действия -->
+  <section class="pt-12 pb-20">
+    <div class="container mx-auto px-4">
+      <div class="max-w-2xl">
+        <p class="text-sm font-semibold text-base-content/60">Ошибка 404</p>
+        <h1 class="mt-2 text-3xl md:text-4xl font-bold">Страница не найдена</h1>
+        <p class="mt-4 text-base md:text-lg text-base-content/70">
+          Возможно, ссылка устарела или адрес введён с ошибкой.
+        </p>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a class="btn btn-primary" href="/">На главную</a>
+          <a class="btn btn-ghost" href="/articles">Перейти к статьям</a>
+        </div>
+
+        <!-- Быстрые ссылки на основные разделы сайта -->
+        <div class="mt-10">
+          <h2 class="text-base font-semibold">Популярные разделы</h2>
+          <div class="mt-3 flex flex-wrap gap-2">
+            {quickLinks.map((link) => (
+              <a class="btn btn-sm btn-outline" href={link.href}>{link.label}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</SiteLayout>
