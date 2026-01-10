@@ -2,12 +2,12 @@
 // src/components/Breadcrumbs.astro
 // Хлебные крошки для внутренних страниц.
 
-export interface BreadcrumbItem {
+interface BreadcrumbItem {
   label: string
   href?: string
 }
 
-export interface Props {
+interface Props {
   items: BreadcrumbItem[]
 }
 
