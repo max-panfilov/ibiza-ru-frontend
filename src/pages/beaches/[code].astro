@@ -6,6 +6,7 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
 import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { beachRepository } from '@/entities/beach/api/beachRepository'
+import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
 import { logApiError } from '@/shared/api/errors'
 import type { Beach } from '@/entities/beach/model/types'
 
@@ -36,6 +37,9 @@ try {
 
 // SEO: og:image берём из обложки (или первого изображения).
 const ogImage = beach.coverImage?.url ?? beach.images?.[0]?.url
+
+// Описание приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
+const descriptionHtml = beach.description ? await renderArticleMarkdownToHtml(beach.description) : ''
 
 // SEO: JSON-LD для пляжа. Берём максимально универсальный тип TouristAttraction.
 const beachStructuredData = {
@@ -87,7 +91,7 @@ const beachStructuredData = {
 
       {/* Короткое описание пляжа с сохранением переводов строк */}
       {beach.description ? (
-        <p class="mt-2 text-base-content/70 multiline-text">{beach.description}</p>
+        <div class="mt-2 text-base-content/70 article-content" set:html={descriptionHtml} />
       ) : null}
     </header>
 

@@ -6,6 +6,7 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import { articleRepository } from '@/entities/article/api/articleRepository'
 import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
+import { getTransformedDirectusAssetUrl } from '@/shared/lib/imageHelpers'
 import type { Article } from '@/entities/article/model/types'
 
 let articles: Article[] = []
@@ -21,6 +22,10 @@ try {
 // SEO: JSON-LD для страницы-коллекции статей.
 // SEO: og:image для страницы списка. Берём cover первой статьи (если есть).
 const ogImage = articles[0]?.coverImage?.url
+
+const ogImageTransformed = ogImage
+  ? getTransformedDirectusAssetUrl(ogImage, { width: 1200, quality: 75, format: 'webp', fit: 'cover' })
+  : undefined
 
 const articlesStructuredData = [
   {
@@ -51,7 +56,7 @@ const articlesStructuredData = [
   title="Статьи об Ибице | Ibiza.ru"
   description="Интересные статьи, обзоры и рекомендации об отдыхе на Ибице (прототип)"
   canonical="https://ibiza.ru/articles"
-  ogImage={ogImage}
+  ogImage={ogImageTransformed}
   structuredData={articlesStructuredData}
 >
   <div class="container mx-auto px-4 py-10">
@@ -80,7 +85,12 @@ const articlesStructuredData = [
             class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow"
           >
             <figure class="aspect-[16/9]">
-              <img src={a.coverImage?.url ?? '/placeholder.jpg'} alt={a.title} class="h-full w-full object-cover" loading="lazy" />
+              <img
+                src={a.coverImage?.url ? getTransformedDirectusAssetUrl(a.coverImage.url, { width: 900, quality: 70, format: 'webp', fit: 'cover' }) : '/placeholder.jpg'}
+                alt={a.title}
+                class="h-full w-full object-cover"
+                loading="lazy"
+              />
             </figure>
             <div class="card-body">
               <h2 class="card-title leading-snug">{a.title}</h2>

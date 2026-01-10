@@ -7,6 +7,7 @@ import { renderArticleMarkdown } from '@/features/article-content/lib/renderArti
 import { articleRepository } from '@/entities/article/api/articleRepository'
 import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
+import { getTransformedDirectusAssetUrl } from '@/shared/lib/imageHelpers'
 import type { Article } from '@/entities/article/model/types'
 
 export async function getStaticPaths() {
@@ -31,6 +32,10 @@ const rendered = await renderArticleMarkdown(article.content)
 
 // SEO: og:image берём из cover (или плейсхолдера, если нет).
 const ogImage = article.coverImage?.url
+
+const ogImageTransformed = ogImage
+  ? getTransformedDirectusAssetUrl(ogImage, { width: 1200, quality: 75, format: 'webp', fit: 'cover' })
+  : undefined
 
 // SEO: JSON-LD для статьи.
 const articleStructuredData = {
@@ -66,7 +71,7 @@ const articleStructuredData = {
   description={article.summary}
   canonical={`https://ibiza.ru/articles/${article.code}`}
   ogType="article"
-  ogImage={ogImage}
+  ogImage={ogImageTransformed}
   structuredData={articleStructuredData}
 >
   <div id="top" class="container mx-auto px-4 py-10">
@@ -94,7 +99,7 @@ const articleStructuredData = {
           <figure class="mb-8">
             <div class="w-full aspect-[16/9] overflow-hidden rounded-2xl border border-base-200 bg-base-200/30">
               <img
-                src={article.coverImage.url}
+                src={getTransformedDirectusAssetUrl(article.coverImage.url, { width: 1600, quality: 75, format: 'webp', fit: 'cover' })}
                 alt={article.title}
                 class="h-full w-full object-cover"
                 loading="eager"

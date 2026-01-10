@@ -8,6 +8,7 @@ import type { Club } from '@/entities/club/model/types'
 import type { Hotel } from '@/entities/hotel/model/types'
 import type { Beach } from '@/entities/beach/model/types'
 import type { Restaurant } from '@/entities/restaurant/model/types'
+import { getTransformedDirectusAssetUrl } from '@/shared/lib/imageHelpers'
 
 export interface Props {
   entity: Club | Hotel | Beach | Restaurant
@@ -32,12 +33,23 @@ const starCount: number | undefined =
     ? Math.min(5, Math.round(rawStarRating))
     : undefined
 const address: string | undefined = place.address ?? place.location
+
+// Рендерим не «оригинал», а трансформированный asset URL (Directus отдаст ресайз/сжатие на лету).
+const coverSrc = entity.coverImage?.url
+  ? getTransformedDirectusAssetUrl(entity.coverImage.url, {
+      // Под карточку 16:9 этого достаточно; браузер не будет тянуть многомегабайтные оригиналы.
+      width: 900,
+      quality: 70,
+      format: 'webp',
+      fit: 'cover',
+    })
+  : '/placeholder.jpg'
 ---
 
 <a href={href} class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow">
   <figure class="aspect-[16/9]">
     <img
-      src={entity.coverImage?.url ?? '/placeholder.jpg'}
+      src={coverSrc}
       alt={entity.title}
       class="h-full w-full object-cover"
       loading="lazy"

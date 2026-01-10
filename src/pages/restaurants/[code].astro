@@ -6,6 +6,7 @@ import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
 import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
+import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
 import { logApiError } from '@/shared/api/errors'
 import type { Restaurant } from '@/entities/restaurant/model/types'
 
@@ -36,6 +37,9 @@ try {
 
 // SEO: og:image берём из обложки (или первого изображения).
 const ogImage = restaurant.coverImage?.url ?? restaurant.images?.[0]?.url
+
+// Описание приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
+const descriptionHtml = restaurant.description ? await renderArticleMarkdownToHtml(restaurant.description) : ''
 
 // SEO: JSON-LD для ресторана.
 const restaurantStructuredData = {
@@ -90,7 +94,7 @@ const restaurantStructuredData = {
 
       {/* Далее — описание ресторана с поддержкой переводов строк */}
       {restaurant.description ? (
-        <p class="mt-3 text-base-content/70 multiline-text">{restaurant.description}</p>
+        <div class="mt-3 text-base-content/70 article-content" set:html={descriptionHtml} />
       ) : null}
     </header>
 

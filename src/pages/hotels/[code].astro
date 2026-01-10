@@ -7,6 +7,7 @@ import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
 import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
 import { Icon } from 'astro-icon/components'
 import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
+import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
 import { logApiError } from '@/shared/api/errors'
 import type { Hotel } from '@/entities/hotel/model/types'
 
@@ -37,6 +38,9 @@ try {
 
 // SEO: og:image берём из обложки (или первого изображения).
 const ogImage = hotel.coverImage?.url ?? hotel.images?.[0]?.url
+
+// Описание приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
+const descriptionHtml = hotel.description ? await renderArticleMarkdownToHtml(hotel.description) : ''
 
 // SEO: JSON-LD для отеля (минимально полезные поля).
 const hotelStructuredData = {
@@ -100,7 +104,7 @@ const hotelStructuredData = {
 
       {/* Описание отеля: поддерживаем переводы строк через CSS-класс multiline-text */}
       {hotel.description ? (
-        <p class="mt-3 text-base-content/70 multiline-text">{hotel.description}</p>
+        <div class="mt-3 text-base-content/70 article-content" set:html={descriptionHtml} />
       ) : null}
     </header>
 

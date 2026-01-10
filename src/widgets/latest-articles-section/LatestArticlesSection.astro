@@ -5,6 +5,7 @@
 import { articleRepository } from '@/entities/article/api/articleRepository'
 import { formatDateRu } from '@/shared/lib/formatDate'
 import { logApiError } from '@/shared/api/errors'
+import { getTransformedDirectusAssetUrl } from '@/shared/lib/imageHelpers'
 import type { Article } from '@/entities/article/model/types'
 
 let latest: Article[] = []
@@ -30,7 +31,12 @@ try {
             class="card bg-base-100 border border-base-200 overflow-hidden hover:shadow-md transition-shadow"
           >
             <figure class="aspect-[16/9]">
-              <img src={a.coverImage?.url ?? '/placeholder.jpg'} alt={a.title} class="h-full w-full object-cover" loading="lazy" />
+              <img
+                src={a.coverImage?.url ? getTransformedDirectusAssetUrl(a.coverImage.url, { width: 900, quality: 70, format: 'webp', fit: 'cover' }) : '/placeholder.jpg'}
+                alt={a.title}
+                class="h-full w-full object-cover"
+                loading="lazy"
+              />
             </figure>
             <div class="card-body">
               <h3 class="card-title leading-snug">{a.title}</h3>

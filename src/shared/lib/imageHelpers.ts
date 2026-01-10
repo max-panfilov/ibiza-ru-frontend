@@ -14,6 +14,15 @@ export interface DomainImage {
   isCover?: boolean
 }
 
+ export type ImageTransformParams = {
+   width?: number
+   height?: number
+   quality?: number
+   format?: 'auto' | 'jpg' | 'png' | 'webp' | 'tiff'
+   fit?: 'cover' | 'contain' | 'inside' | 'outside'
+   withoutEnlargement?: boolean
+ }
+
 /**
  * Извлечь URL файла из junction DTO или прямого ID
  */
@@ -53,6 +62,26 @@ export function mapAllImages(images?: ImageJunctionDTO[]): DomainImage[] {
   if (!images || images.length === 0) return []
   return images.map(mapImageDto)
 }
+
+ export function extractDirectusFileIdFromAssetUrl(assetUrl: string): string | undefined {
+   // Извлекаем {id} из URL вида: https://directus.example.com/assets/{id}[?query]
+   try {
+     const url = new URL(assetUrl)
+     const parts = url.pathname.split('/').filter(Boolean)
+     const assetsIndex = parts.lastIndexOf('assets')
+     if (assetsIndex === -1) return undefined
+     return parts[assetsIndex + 1]
+   } catch {
+     return undefined
+   }
+ }
+
+ export function getTransformedDirectusAssetUrl(assetUrl: string, params?: ImageTransformParams): string {
+   // Если это Directus /assets URL — добавляем параметры трансформации, иначе возвращаем как есть
+   const fileId = extractDirectusFileIdFromAssetUrl(assetUrl)
+   if (!fileId) return assetUrl
+   return getImageUrl(fileId, params)
+ }
 
 /**
  * Создать URL для изображения с трансформацией
