@@ -8,6 +8,8 @@ import type { DomainImage } from '@/shared/lib/imageHelpers'
  * Это бизнес-логика, независимая от деталей API или UI
  */
 export interface Club {
+  // ID записи в Directus (нужен для безопасных переходов на сайт через /out)
+  id?: string
   code: string
   title: string
   description?: string
@@ -20,5 +22,7 @@ export interface Club {
   website?: string
   priceRange?: string
   entryFee?: string
+  // Справочные параметры (M2M): музыкальные жанры
+  musicGenres?: string[]
   images: DomainImage[]
 }

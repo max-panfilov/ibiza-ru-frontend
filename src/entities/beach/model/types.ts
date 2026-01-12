@@ -11,5 +11,7 @@ export interface Beach {
   location?: string
   latitude?: number
   longitude?: number
+  // Справочные параметры (M2M): характеристики/удобства пляжа
+  facilities?: string[]
   images: DomainImage[]
 }

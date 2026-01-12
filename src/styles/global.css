@@ -63,6 +63,12 @@ html {
 
 .article-content img {
   @apply rounded-xl border border-base-200;
+  max-height: 520px;
+  height: auto;
+  max-width: 100%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Врезка / callout внутри статьи */

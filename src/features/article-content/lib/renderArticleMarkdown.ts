@@ -24,6 +24,11 @@ export interface RenderedArticleContent {
   toc: ArticleTocItem[]
 }
 
+export interface InlineImage {
+  url: string
+  alt?: string
+}
+
 import { clubRepository } from '@/entities/club/api/clubRepository'
 import { restaurantRepository } from '@/entities/restaurant/api/restaurantRepository'
 import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
@@ -49,6 +54,33 @@ function slugifyForAnchor(input: string): string {
       .replace(/[^a-z0-9\s-]+/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '')
+  }
+}
+
+function remarkInlineImagesFromThematicBreaks(params: { images: InlineImage[] }) {
+  // Вставляем изображения вместо `---` по порядку.
+  // Если изображений не хватило — оставляем разделитель как есть.
+  return (tree: any) => {
+    let cursor = 0
+
+    visit(tree, 'thematicBreak', (node: any, index: number | undefined, parent: any) => {
+      if (!parent || typeof index !== 'number') return
+
+      const image = params.images[cursor]
+      if (!image) return
+      cursor += 1
+
+      parent.children[index] = {
+        type: 'paragraph',
+        children: [
+          {
+            type: 'image',
+            url: image.url,
+            alt: image.alt ?? '',
+          },
+        ],
+      }
+    })
   }
 }
 
@@ -536,7 +568,13 @@ function rehypeFigureImages() {
   }
 }
 
-export async function renderArticleMarkdown(markdown: string): Promise<RenderedArticleContent> {
+export async function renderArticleMarkdown(
+  markdown: string,
+  options?: {
+    // Если переданы изображения — заменяем `---` на картинки по порядку.
+    inlineImages?: InlineImage[]
+  }
+): Promise<RenderedArticleContent> {
   const toc: ArticleTocItem[] = []
   const slugger = new Map<string, number>()
 
@@ -545,9 +583,15 @@ export async function renderArticleMarkdown(markdown: string): Promise<RenderedA
 
   // 2) Парсим markdown → AST → HTML.
   // Важно: мы НЕ включаем обработку «сырого HTML» из markdown (без rehype-raw), чтобы не тащить XSS.
-  const file = await unified()
+  const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
+
+  if ((options?.inlineImages ?? []).length > 0) {
+    processor.use(remarkInlineImagesFromThematicBreaks, { images: options?.inlineImages ?? [] })
+  }
+
+  const file = await processor
     .use(remarkDirective)
     .use(remarkArticleTocAndAnchors, { toc, slugger })
     .use(remarkArticleCustomBlocks)
@@ -561,5 +605,13 @@ export async function renderArticleMarkdown(markdown: string): Promise<RenderedA
 
 export async function renderArticleMarkdownToHtml(markdown: string): Promise<string> {
   const rendered = await renderArticleMarkdown(markdown)
+  return rendered.html
+}
+
+export async function renderMarkdownWithInlineImagesToHtml(
+  markdown: string,
+  inlineImages: InlineImage[]
+): Promise<string> {
+  const rendered = await renderArticleMarkdown(markdown, { inlineImages })
   return rendered.html
 }

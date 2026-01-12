@@ -4,9 +4,10 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
-import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
+import PlaceMapModal from '@/widgets/place-map/PlaceMapModal.astro'
 import { clubRepository } from '@/entities/club/api/clubRepository'
-import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+import { renderArticleMarkdownToHtml, renderMarkdownWithInlineImagesToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+import ParamBadges from '@/shared/ui/ParamBadges.astro'
 import { logApiError } from '@/shared/api/errors'
 import type { Club } from '@/entities/club/model/types'
 
@@ -38,8 +39,18 @@ try {
 // SEO: og:image берём из обложки (или первого изображения).
 const ogImage = club.coverImage?.url ?? club.images?.[0]?.url
 
-// Описание приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
-const descriptionHtml = club.description ? await renderArticleMarkdownToHtml(club.description) : ''
+// Анонс приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
+const markdownHasSeparators = /(^|\n)\s*---\s*(\n|$)/.test(club.description ?? '')
+const inlineImages = (club.images ?? []).map((img) => ({
+  url: img.url,
+  alt: img.alt ?? club.title,
+}))
+const useInlineImages = markdownHasSeparators && inlineImages.length > 0
+const descriptionHtml = club.description
+  ? useInlineImages
+    ? await renderMarkdownWithInlineImagesToHtml(club.description, inlineImages)
+    : await renderArticleMarkdownToHtml(club.description)
+  : ''
 
 // SEO: JSON-LD для ночного клуба.
 const clubStructuredData = {
@@ -91,8 +102,39 @@ const clubStructuredData = {
         ) : club.priceRange ? (
           <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{club.priceRange}</span>
         ) : null}
-        {club.address ? <span>{club.address}</span> : null}
+        {/* Адрес кликабелен: карта открывается в модалке и инициализируется только после открытия (экономим API). */}
+        {club.address ? (
+          <PlaceMapModal
+            id={`club-${club.code}`}
+            title={club.title}
+            label={club.address}
+            latitude={club.latitude}
+            longitude={club.longitude}
+            triggerClass="link link-hover"
+          />
+        ) : null}
       </div>
+
+      {/* Контакты: переносим в верхний блок, без подписей */}
+      {club.phone || club.email || club.website ? (
+        <div class="mt-3 flex flex-wrap items-center gap-3 text-base-content/70">
+          {club.phone ? <a class="link" href={`tel:${club.phone}`}>{club.phone}</a> : null}
+          {club.email ? <a class="link" href={`mailto:${club.email}`}>{club.email}</a> : null}
+          {club.website ? (
+            <a
+              class="btn btn-outline btn-sm"
+              href={`/out?to=${encodeURIComponent(club.website)}`}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            >
+              перейти на сайт
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Параметры клуба (M2M): музыкальные жанры */}
+      {club.musicGenres?.length ? <ParamBadges values={club.musicGenres} /> : null}
 
       {/* Анонс клуба с сохранением переводов строк */}
       {club.description ? (
@@ -101,11 +143,13 @@ const clubStructuredData = {
     </header>
 
     <!-- Крупное фото/галерея: слайдер (Embla) -->
-    <ImageCarousel
-      id={`club-carousel-${club.code}`}
-      images={club.images?.map((img) => img.url) ?? (club.coverImage?.url ? [club.coverImage.url] : ['/placeholder.jpg'])}
-      alt={club.title}
-    />
+    {useInlineImages ? null : (
+      <ImageCarousel
+        id={`club-carousel-${club.code}`}
+        images={club.images?.map((img) => img.url) ?? (club.coverImage?.url ? [club.coverImage.url] : ['/placeholder.jpg'])}
+        alt={club.title}
+      />
+    )}
 
     <!-- Данные страницы в одну колонку -->
     <div class="mt-10">
@@ -122,25 +166,6 @@ const clubStructuredData = {
                   <div class="flex gap-2">
                     <dt class="w-28 text-base-content/60">Адрес</dt>
                     <dd class="flex-1">{club.address}</dd>
-                  </div>
-                ) : null}
-
-                {club.phone ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Телефон</dt>
-                    <dd class="flex-1"><a class="link" href={`tel:${club.phone}`}>{club.phone}</a></dd>
-                  </div>
-                ) : null}
-
-                {club.website ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Сайт</dt>
-                    {/* Показываем полный URL сайта клуба и закрываем ссылку от индексации */}
-                    <dd class="flex-1">
-                      <a class="link" href={club.website} target="_blank" rel="noreferrer nofollow">
-                        {club.website}
-                      </a>
-                    </dd>
                   </div>
                 ) : null}
 
@@ -165,13 +190,6 @@ const clubStructuredData = {
         </div>
       </div>
 
-      <!-- Карта -->
-      <PlaceMap
-        id={`club-map-${club.code}`}
-        title={club.title}
-        latitude={club.latitude}
-        longitude={club.longitude}
-      />
     </div>
   </div>
 </SiteLayout>

@@ -1,0 +1,21 @@
+---
+// src/shared/ui/ParamBadges.astro
+// Простой UI-компонент для отображения списка параметров/тегов в виде плашек.
+
+export interface Props {
+  values: string[]
+}
+
+const { values } = Astro.props
+
+// Нормализуем значения: убираем пустые строки и дубликаты, чтобы не засорять UI.
+const normalized = Array.from(new Set((values ?? []).map((v) => (v ?? '').trim()).filter(Boolean)))
+---
+
+{normalized.length > 0 ? (
+  <div class="mt-3 flex flex-wrap gap-2">
+    {normalized.map((v) => (
+      <span class="badge badge-primary badge-soft badge-sm md:badge-md whitespace-nowrap">{v}</span>
+    ))}
+  </div>
+) : null}

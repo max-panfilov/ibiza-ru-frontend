@@ -4,6 +4,8 @@
 import type { DomainImage } from '@/shared/lib/imageHelpers'
 
 export interface Restaurant {
+  // ID записи в Directus (нужен для безопасных переходов на сайт через /out)
+  id?: string
   code: string
   title: string
   description?: string
@@ -15,5 +17,7 @@ export interface Restaurant {
   email?: string
   website?: string
   priceRange?: string
+  // Справочные параметры (M2M): кухни ресторана
+  cuisines?: string[]
   images: DomainImage[]
 }

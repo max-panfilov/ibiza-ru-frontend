@@ -4,9 +4,10 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
-import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
+import PlaceMapModal from '@/widgets/place-map/PlaceMapModal.astro'
 import { beachRepository } from '@/entities/beach/api/beachRepository'
-import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+import { renderArticleMarkdownToHtml, renderMarkdownWithInlineImagesToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+import ParamBadges from '@/shared/ui/ParamBadges.astro'
 import { logApiError } from '@/shared/api/errors'
 import type { Beach } from '@/entities/beach/model/types'
 
@@ -39,7 +40,17 @@ try {
 const ogImage = beach.coverImage?.url ?? beach.images?.[0]?.url
 
 // Описание приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
-const descriptionHtml = beach.description ? await renderArticleMarkdownToHtml(beach.description) : ''
+const markdownHasSeparators = /(^|\n)\s*---\s*(\n|$)/.test(beach.description ?? '')
+const inlineImages = (beach.images ?? []).map((img) => ({
+  url: img.url,
+  alt: img.alt ?? beach.title,
+}))
+const useInlineImages = markdownHasSeparators && inlineImages.length > 0
+const descriptionHtml = beach.description
+  ? useInlineImages
+    ? await renderMarkdownWithInlineImagesToHtml(beach.description, inlineImages)
+    : await renderArticleMarkdownToHtml(beach.description)
+  : ''
 
 // SEO: JSON-LD для пляжа. Берём максимально универсальный тип TouristAttraction.
 const beachStructuredData = {
@@ -86,8 +97,20 @@ const beachStructuredData = {
 
       {/* Адрес/локация пляжа сразу под названием, без плашки */}
       {beach.location ? (
-        <p class="mt-2 text-base-content/70">{beach.location}</p>
+        <div class="mt-2 text-base-content/70">
+          <PlaceMapModal
+            id={`beach-${beach.code}`}
+            title={beach.title}
+            label={beach.location}
+            latitude={beach.latitude}
+            longitude={beach.longitude}
+            triggerClass="link link-hover"
+          />
+        </div>
       ) : null}
+
+      {/* Параметры пляжа (M2M): характеристики/удобства */}
+      {beach.facilities?.length ? <ParamBadges values={beach.facilities} /> : null}
 
       {/* Короткое описание пляжа с сохранением переводов строк */}
       {beach.description ? (
@@ -96,18 +119,13 @@ const beachStructuredData = {
     </header>
 
     <!-- Крупное фото/галерея: слайдер (Embla) -->
-    <ImageCarousel
-      id={`beach-carousel-${beach.code}`}
-      images={beach.images?.map((img) => img.url) ?? (beach.coverImage?.url ? [beach.coverImage.url] : ['/placeholder.jpg'])}
-      alt={beach.title}
-    />
+    {useInlineImages ? null : (
+      <ImageCarousel
+        id={`beach-carousel-${beach.code}`}
+        images={beach.images?.map((img) => img.url) ?? (beach.coverImage?.url ? [beach.coverImage.url] : ['/placeholder.jpg'])}
+        alt={beach.title}
+      />
+    )}
 
-    <!-- Карта -->
-    <PlaceMap
-      id={`beach-map-${beach.code}`}
-      title={beach.title}
-      latitude={beach.latitude}
-      longitude={beach.longitude}
-    />
   </div>
 </SiteLayout>

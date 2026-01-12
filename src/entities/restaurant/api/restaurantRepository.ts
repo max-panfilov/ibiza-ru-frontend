@@ -20,7 +20,22 @@ export interface IRestaurantRepository {
 }
 
 function mapDtoToDomain(dto: RestaurantDTO): Restaurant {
-  return mapPlaceDto(dto)
+  const base = mapPlaceDto(dto)
+
+  // M2M: кухни ресторана (restaurants.cuisines -> restaurant_cuisines -> cuisines)
+  const cuisines = (dto.cuisines ?? [])
+    .map((junction) => {
+      const cuisine = junction?.cuisine_id
+      if (!cuisine) return undefined
+      if (typeof cuisine === 'string') return cuisine
+      return cuisine.name
+    })
+    .filter(Boolean) as string[]
+
+  return {
+    ...base,
+    cuisines: cuisines.length > 0 ? cuisines : undefined,
+  }
 }
 
 class RestaurantRepository implements IRestaurantRepository {
@@ -72,6 +87,9 @@ class RestaurantRepository implements IRestaurantRepository {
             '*',
             'images.*',
             'images.file_id.*',
+            // Подтягиваем M2M кухни ресторана
+            'cuisines.*',
+            'cuisines.cuisine_id.*',
           ],
           deep: {
             images: {

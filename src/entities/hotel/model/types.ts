@@ -4,6 +4,8 @@
 import type { DomainImage } from '@/shared/lib/imageHelpers'
 
 export interface Hotel {
+  // ID записи в Directus (нужен для безопасных переходов на сайт через /out)
+  id?: string
   code: string
   title: string
   description?: string

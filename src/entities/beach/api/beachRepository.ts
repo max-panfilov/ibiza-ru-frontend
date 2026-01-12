@@ -20,6 +20,16 @@ export interface IBeachRepository {
 }
 
 function mapDtoToDomain(dto: BeachDTO): Beach {
+  // M2M: характеристики/удобства пляжа (beaches.facilities -> beach_facilities -> facilities)
+  const facilities = (dto.facilities ?? [])
+    .map((junction) => {
+      const facility = junction?.facility_id
+      if (!facility) return undefined
+      if (typeof facility === 'string') return facility
+      return facility.name
+    })
+    .filter(Boolean) as string[]
+
   return {
     code: dto.code,
     title: dto.name,
@@ -28,6 +38,7 @@ function mapDtoToDomain(dto: BeachDTO): Beach {
     location: dto.location,
     latitude: dto.latitude,
     longitude: dto.longitude,
+    facilities: facilities.length > 0 ? facilities : undefined,
     images: mapAllImages(dto.images),
   }
 }
@@ -81,6 +92,9 @@ class BeachRepository implements IBeachRepository {
             '*',
             'images.*',
             'images.file_id.*',
+            // Подтягиваем M2M характеристики
+            'facilities.*',
+            'facilities.facility_id.*',
           ],
           deep: {
             images: {

@@ -1,0 +1,146 @@
+---
+// src/widgets/place-map/PlaceMapModal.astro
+// Модалка с Google Map, которая инициализируется только после открытия (экономим вызовы API).
+
+interface Props {
+  /**
+   * Базовый id для модалки и контейнера карты.
+   */
+  id: string
+  title: string
+  /**
+   * Текст адреса/локации, по клику на который открываем карту.
+   */
+  label: string
+  latitude?: number
+  longitude?: number
+  zoom?: number
+  /**
+   * CSS-классы для кликабельного адреса.
+   */
+  triggerClass?: string
+}
+
+const { id, title, label, latitude, longitude, zoom = 15, triggerClass = 'link link-hover' } = Astro.props
+
+// API key должен быть "PUBLIC_", т.к. Google Maps JS API загружается в браузере.
+const apiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY as string | undefined
+
+const lat = latitude
+const lng = longitude
+
+const hasCoords = typeof lat === 'number' && typeof lng === 'number'
+const hasApiKey = typeof apiKey === 'string' && apiKey.length > 0
+
+const dialogId = `${id}-map-dialog`
+const mapElementId = `${id}-map-container`
+---
+
+<>
+  <button
+    type="button"
+    class={triggerClass}
+    data-place-map-modal-trigger
+    data-dialog-id={dialogId}
+    data-map-element-id={mapElementId}
+  >
+    {label}
+  </button>
+
+  <dialog id={dialogId} class="modal">
+    <div class="modal-box w-11/12 max-w-4xl">
+      <form method="dialog">
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" aria-label="Закрыть">
+          ×
+        </button>
+      </form>
+
+      <h3 class="font-bold text-lg">{title}</h3>
+
+      <div class="mt-4 aspect-video rounded-2xl border border-base-200 bg-base-200/40 overflow-hidden">
+        {hasCoords && hasApiKey ? (
+          <div
+            id={mapElementId}
+            class="w-full h-full"
+            aria-label={`Карта: ${title}`}
+            data-place-map-container
+            data-title={title}
+            data-lat={lat}
+            data-lng={lng}
+            data-zoom={zoom}
+            data-api-key={apiKey}
+          ></div>
+        ) : (
+          <div class="w-full h-full flex items-center justify-center text-base-content/60 p-4 text-center">
+            {!hasCoords ? (
+              <span>Координаты объекта не указаны (latitude/longitude)</span>
+            ) : !hasApiKey ? (
+              <span>Карта не настроена: добавьте PUBLIC_GOOGLE_MAPS_API_KEY</span>
+            ) : (
+              <span>Карта временно недоступна</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <p class="mt-3 text-sm text-base-content/60">{label}</p>
+    </div>
+
+    <form method="dialog" class="modal-backdrop">
+      <button aria-label="Закрыть"></button>
+    </form>
+  </dialog>
+
+  <script>
+    // Клиентский код: используем делегирование, чтобы скрипт работал независимо от порядка DOM (Astro hoist).
+    // Инициализацию карты выполняем только после открытия модалки.
+    const w = window as any
+    if (!w.__placeMapModalBound) {
+      w.__placeMapModalBound = true
+
+      document.addEventListener('click', async (event) => {
+        const target = event.target
+        if (!(target instanceof Element)) return
+
+        const trigger = target.closest('[data-place-map-modal-trigger]')
+        if (!(trigger instanceof HTMLElement)) return
+
+        const dialogId = trigger.dataset.dialogId
+        const mapElementId = trigger.dataset.mapElementId
+        if (!dialogId) return
+
+        const dialog = document.getElementById(dialogId)
+        if (!(dialog instanceof HTMLDialogElement)) return
+
+        dialog.showModal()
+
+        // Инициализируем карту только если контейнер существует (то есть есть координаты + ключ).
+        if (!mapElementId) return
+        const mapEl = document.getElementById(mapElementId)
+        if (!(mapEl instanceof HTMLElement)) return
+
+        if (mapEl.dataset.placeMapInitialized === 'true') return
+        mapEl.dataset.placeMapInitialized = 'true'
+
+        const title = mapEl.dataset.title ?? ''
+        const apiKey = mapEl.dataset.apiKey
+        const lat = Number(mapEl.dataset.lat)
+        const lng = Number(mapEl.dataset.lng)
+        const zoom = Number(mapEl.dataset.zoom ?? '15')
+
+        if (!apiKey || !Number.isFinite(lat) || !Number.isFinite(lng)) return
+
+        // Динамический импорт: код карты (и загрузка Google Maps API) подтягиваем только при открытии.
+        const mod = await import('./initPlaceMap')
+        await mod.initPlaceMap({
+          elementId: mapElementId,
+          title,
+          lat,
+          lng,
+          apiKey,
+          zoom: Number.isFinite(zoom) ? zoom : 15,
+        })
+      })
+    }
+  </script>
+</>

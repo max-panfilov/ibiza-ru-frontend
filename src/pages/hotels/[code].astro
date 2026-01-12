@@ -4,10 +4,11 @@
 import SiteLayout from '../../layouts/SiteLayout.astro'
 import Breadcrumbs from '@/shared/ui/Breadcrumbs.astro'
 import ImageCarousel from '@/shared/ui/ImageCarousel.astro'
-import PlaceMap from '@/widgets/place-map/PlaceMap.astro'
+import PlaceMapModal from '@/widgets/place-map/PlaceMapModal.astro'
 import { Icon } from 'astro-icon/components'
 import { hotelRepository } from '@/entities/hotel/api/hotelRepository'
-import { renderArticleMarkdownToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+import { renderArticleMarkdownToHtml, renderMarkdownWithInlineImagesToHtml } from '@/features/article-content/lib/renderArticleMarkdown'
+import ParamBadges from '@/shared/ui/ParamBadges.astro'
 import { logApiError } from '@/shared/api/errors'
 import type { Hotel } from '@/entities/hotel/model/types'
 
@@ -40,7 +41,17 @@ try {
 const ogImage = hotel.coverImage?.url ?? hotel.images?.[0]?.url
 
 // Описание приходит из Directus как markdown — рендерим в HTML безопасным пайплайном (без raw HTML).
-const descriptionHtml = hotel.description ? await renderArticleMarkdownToHtml(hotel.description) : ''
+const markdownHasSeparators = /(^|\n)\s*---\s*(\n|$)/.test(hotel.description ?? '')
+const inlineImages = (hotel.images ?? []).map((img) => ({
+  url: img.url,
+  alt: img.alt ?? hotel.title,
+}))
+const useInlineImages = markdownHasSeparators && inlineImages.length > 0
+const descriptionHtml = hotel.description
+  ? useInlineImages
+    ? await renderMarkdownWithInlineImagesToHtml(hotel.description, inlineImages)
+    : await renderArticleMarkdownToHtml(hotel.description)
+  : ''
 
 // SEO: JSON-LD для отеля (минимально полезные поля).
 const hotelStructuredData = {
@@ -99,8 +110,39 @@ const hotelStructuredData = {
         {hotel.priceRange ? (
           <span class="badge badge-outline badge-lg shrink-0 whitespace-nowrap">{hotel.priceRange}</span>
         ) : null}
-        {hotel.address ? <span>{hotel.address}</span> : null}
+        {/* Адрес кликабелен: карта открывается в модалке и инициализируется только после открытия (экономим API). */}
+        {hotel.address ? (
+          <PlaceMapModal
+            id={`hotel-${hotel.code}`}
+            title={hotel.title}
+            label={hotel.address}
+            latitude={hotel.latitude}
+            longitude={hotel.longitude}
+            triggerClass="link link-hover"
+          />
+        ) : null}
       </div>
+
+      {/* Контакты: переносим в верхний блок, без подписей */}
+      {hotel.phone || hotel.email || hotel.website ? (
+        <div class="mt-3 flex flex-wrap items-center gap-3 text-base-content/70">
+          {hotel.phone ? <a class="link" href={`tel:${hotel.phone}`}>{hotel.phone}</a> : null}
+          {hotel.email ? <a class="link" href={`mailto:${hotel.email}`}>{hotel.email}</a> : null}
+          {hotel.website ? (
+            <a
+              class="btn btn-outline btn-sm"
+              href={`/out?to=${encodeURIComponent(hotel.website)}`}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            >
+              перейти на сайт
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Удобства (amenities): пока используем tags как источник данных */}
+      {(hotel.tags ?? []).length ? <ParamBadges values={hotel.tags ?? []} /> : null}
 
       {/* Описание отеля: поддерживаем переводы строк через CSS-класс multiline-text */}
       {hotel.description ? (
@@ -109,80 +151,12 @@ const hotelStructuredData = {
     </header>
 
     <!-- Крупное фото/галерея: слайдер (Embla) -->
-    <ImageCarousel
-      id={`hotel-carousel-${hotel.code}`}
-      images={hotel.images?.map(img => img.url) ?? (hotel.coverImage?.url ? [hotel.coverImage.url] : ['/placeholder.jpg'])}
-      alt={hotel.title}
-    />
-
-    <!-- Данные страницы в одну колонку -->
-    <div class="mt-10">
-
-      <!-- Пример блока «данные объекта» (после Directus здесь будут реальные поля) -->
-      <div class="mt-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="card bg-base-100 border border-base-200">
-            <div class="card-body">
-              <h3 class="card-title text-lg">Основная информация</h3>
-
-              <dl class="mt-2 space-y-2">
-                {hotel.address ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Адрес</dt>
-                    <dd class="flex-1">{hotel.address}</dd>
-                  </div>
-                ) : null}
-
-                {hotel.checkIn || hotel.checkOut ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Заезд/выезд</dt>
-                    <dd class="flex-1">{hotel.checkIn ?? '—'} / {hotel.checkOut ?? '—'}</dd>
-                  </div>
-                ) : null}
-
-                {hotel.phone ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Телефон</dt>
-                    <dd class="flex-1"><a class="link" href={`tel:${hotel.phone}`}>{hotel.phone}</a></dd>
-                  </div>
-                ) : null}
-
-                {hotel.website ? (
-                  <div class="flex gap-2">
-                    <dt class="w-28 text-base-content/60">Сайт</dt>
-                    <dd class="flex-1">
-                      <a class="link" href={hotel.website} target="_blank" rel="noreferrer nofollow">
-                        {hotel.website}
-                      </a>
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-            </div>
-          </div>
-
-          <div class="card bg-base-100 border border-base-200">
-            <div class="card-body">
-              <h3 class="card-title text-lg">Удобства</h3>
-              <div class="mt-2 flex flex-wrap gap-2">
-                {(hotel.tags ?? []).length === 0 ? (
-                  <span class="text-base-content/60">Пока нет данных</span>
-                ) : (
-                  (hotel.tags ?? []).map((t) => <span class="badge badge-outline">{t}</span>)
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Карта -->
-      <PlaceMap
-        id={`hotel-map-${hotel.code}`}
-        title={hotel.title}
-        latitude={hotel.latitude}
-        longitude={hotel.longitude}
+    {useInlineImages ? null : (
+      <ImageCarousel
+        id={`hotel-carousel-${hotel.code}`}
+        images={hotel.images?.map(img => img.url) ?? (hotel.coverImage?.url ? [hotel.coverImage.url] : ['/placeholder.jpg'])}
+        alt={hotel.title}
       />
-    </div>
+    )}
   </div>
 </SiteLayout>

@@ -17,6 +17,11 @@ export interface DirectusSchema {
   articles: ArticleDTO
   party_schedule: PartyScheduleDTO
   
+  // Справочники параметров
+  cuisines: CuisineDTO
+  facilities: FacilityDTO
+  music_genres: MusicGenreDTO
+  
   // Junction таблицы для изображений
   club_images: ImageJunctionDTO
   hotel_images: ImageJunctionDTO
@@ -24,6 +29,11 @@ export interface DirectusSchema {
   restaurant_images: ImageJunctionDTO
   article_images: ImageJunctionDTO
   party_images: ImageJunctionDTO
+
+  // Junction таблицы для M2M параметров
+  restaurant_cuisines: RestaurantCuisineJunctionDTO
+  club_music_genres: ClubMusicGenreJunctionDTO
+  beach_facilities: BeachFacilityJunctionDTO
 }
 
 /**
@@ -37,6 +47,21 @@ export interface DirectusFileDTO {
   filesize?: number
   type?: string
 }
+
+/**
+ * DTO для справочников (например cuisines/facilities/music_genres)
+ */
+export interface LookupItemDTO {
+  id: string // UUID
+  name: string
+  code: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CuisineDTO extends LookupItemDTO {}
+export interface FacilityDTO extends LookupItemDTO {}
+export interface MusicGenreDTO extends LookupItemDTO {}
 
 /**
  * DTO для junction таблиц изображений
@@ -76,6 +101,9 @@ export interface PlaceDTO {
  */
 export interface ClubDTO extends PlaceDTO {
   entry_fee?: string
+
+  // M2M: музыкальные жанры клуба (через club_music_genres)
+  music_genres?: ClubMusicGenreJunctionDTO[]
 }
 
 /**
@@ -90,13 +118,38 @@ export interface HotelDTO extends PlaceDTO {
  */
 export interface BeachDTO extends Omit<PlaceDTO, 'address' | 'phone' | 'email' | 'website' | 'price_range'> {
   location?: string
+
+  // M2M: характеристики пляжа (через beach_facilities)
+  facilities?: BeachFacilityJunctionDTO[]
 }
 
 /**
  * DTO для ресторанов из Directus
  */
 export interface RestaurantDTO extends PlaceDTO {
-  // Наследует все поля из PlaceDTO
+  // M2M: кухни ресторана (через restaurant_cuisines)
+  cuisines?: RestaurantCuisineJunctionDTO[]
+}
+
+/**
+ * DTO для junction таблиц (M2M параметры)
+ */
+export interface RestaurantCuisineJunctionDTO {
+  id?: string // UUID (может отсутствовать в зависимости от схемы)
+  restaurant_id?: string
+  cuisine_id?: string | CuisineDTO
+}
+
+export interface ClubMusicGenreJunctionDTO {
+  id?: string // UUID (может отсутствовать в зависимости от схемы)
+  club_id?: string
+  genre_id?: string | MusicGenreDTO
+}
+
+export interface BeachFacilityJunctionDTO {
+  id?: string // UUID (может отсутствовать в зависимости от схемы)
+  beach_id?: string
+  facility_id?: string | FacilityDTO
 }
 
 /**

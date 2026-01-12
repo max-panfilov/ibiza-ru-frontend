@@ -30,9 +30,21 @@ export interface IClubRepository {
  */
 function mapDtoToDomain(dto: ClubDTO): Club {
   const base = mapPlaceDto(dto)
+
+  // M2M: музыкальные жанры клуба (clubs.music_genres -> club_music_genres -> music_genres)
+  const musicGenres = (dto.music_genres ?? [])
+    .map((junction) => {
+      const genre = junction?.genre_id
+      if (!genre) return undefined
+      if (typeof genre === 'string') return genre
+      return genre.name
+    })
+    .filter(Boolean) as string[]
+
   return {
     ...base,
     entryFee: dto.entry_fee,
+    musicGenres: musicGenres.length > 0 ? musicGenres : undefined,
   }
 }
 
@@ -99,6 +111,9 @@ class ClubRepository implements IClubRepository {
             '*',
             'images.*',
             'images.file_id.*',
+            // Подтягиваем M2M музыкальные жанры
+            'music_genres.*',
+            'music_genres.genre_id.*',
           ],
           // Сортируем все изображения по sort
           deep: {

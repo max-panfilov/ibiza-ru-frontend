@@ -10,6 +10,8 @@ import type { DomainImage } from '@/shared/lib/imageHelpers'
  * Используется как основа для клубов, отелей, ресторанов, пляжей
  */
 export interface BasePlace {
+  // ID записи в Directus (нужен для безопасных переходов на сайт через /out)
+  id?: string
   code: string
   title: string
   description?: string
@@ -31,6 +33,7 @@ export interface BasePlace {
  */
 export function mapPlaceDto(dto: PlaceDTO): BasePlace {
   return {
+    id: dto.id,
     code: dto.code,
     title: dto.name,
     description: dto.description,

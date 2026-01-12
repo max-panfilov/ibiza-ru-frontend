@@ -1,0 +1,73 @@
+---
+// src/pages/out.astro
+// Страница-прокладка для безопасного перехода на внешний сайт объекта.
+// Делает редирект скриптом (как просили) + имеет fallback на meta refresh.
+
+const toParam = Astro.url.searchParams.get('to') ?? ''
+
+// Минимальная нормализация URL: добавляем https:// если схемы нет.
+// Блокируем потенциально опасные схемы (javascript:, data: и т.п.).
+const normalizeExternalUrl = (raw: string): string | null => {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+
+  // Если схема не указана, считаем что это домен/путь и добавляем https.
+  const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed) ? trimmed : `https://${trimmed}`
+
+  try {
+    const url = new URL(withScheme)
+
+    // Разрешаем только http/https.
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
+const targetUrl = normalizeExternalUrl(toParam)
+
+// Если URL невалидный — не редиректим наружу.
+if (!targetUrl) {
+  return Astro.redirect('/')
+}
+---
+
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Переход на сайт…</title>
+
+    <!-- Fallback: если JS недоступен, возвращаем на главную -->
+    <noscript>
+      <meta http-equiv="refresh" content={`0; url=${targetUrl}`} />
+    </noscript>
+    <meta name="robots" content="noindex,nofollow" />
+  </head>
+  <body class="min-h-screen flex items-center justify-center bg-base-200 text-base-content">
+    <main class="card bg-base-100 border border-base-200 max-w-xl w-full">
+      <div class="card-body">
+        <h1 class="card-title">Переходим на сайт…</h1>
+
+        <p class="text-base-content/70">
+          Если переход не начался автоматически, нажми:
+          <a class="link" href={targetUrl} rel="noreferrer nofollow">{targetUrl}</a>
+        </p>
+
+        <!-- Редирект скриптом (основной сценарий) -->
+        <script define:vars={{ targetUrl }}>
+          window.location.replace(targetUrl)
+        </script>
+
+        <noscript>
+          <p class="mt-3 text-base-content/70">
+            У тебя отключён JavaScript. Переход доступен по ссылке выше.
+          </p>
+        </noscript>
+      </div>
+    </main>
+  </body>
+</html>
